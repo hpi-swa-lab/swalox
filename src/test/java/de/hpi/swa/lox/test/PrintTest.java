@@ -41,13 +41,17 @@
  */
 package de.hpi.swa.lox.test;
 
-
 import org.junit.Test;
 
 public class PrintTest extends AbstractLoxTest {
     @Test
-    public void printTrue()  {
+    public void printTrue() {
         runAndExpect("print true", "print true;", "true\n");
         runAndExpect("twice print true", "print true; print true;", "true\ntrue\n");
+    }
+
+    @Test
+    public void printFalse() {
+        runAndExpect("printFalse", "print false;", "false\n");
     }
 }

@@ -20,9 +20,10 @@ statement      : printStmt;
 
 printStmt      : 'print' expression ';' ;
 
-expression     : true;
+expression     : true | false;
 
 true           : 'true';
+false           : 'false';
 
 // more... 
 WS             : [ \t\r\n]+ -> skip ;
