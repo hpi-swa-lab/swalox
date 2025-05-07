@@ -1,0 +1,13 @@
+#!/bin/sh
+# set -x
+
+DIR=$(dirname "$0")
+
+if [ ! -e $DIR/classpath ]; then
+    ./mvnw -q exec:exec -Dexec.executable=echo -Dexec.args="%classpath" > classpath
+fi
+CLASSPATH=`cat $DIR/classpath`
+
+JAVA="java"
+
+rlwrap "$JAVA" -cp "$CLASSPATH"  $EXTRA_JAVA_ARGS de.hpi.swa.lox.cli.LoxMain  "$@"

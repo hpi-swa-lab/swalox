@@ -1,0 +1,16 @@
+name: GraalVM build
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: BYOPL24
+    steps:
+      - uses: actions/checkout@v4
+      - uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '21'      # See 'Options' for more details
+          distribution: 'graalvm' # See 'Supported distributions' for available options
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Run tests
+        run: ./mvnw test
+      - name: Build native image
+        run: ./mvnw package -Pnative
