@@ -15,5 +15,10 @@
     "java.debug.settings.onBuildFailureProceed": true,
     "java.testMethod": ["${workspaceFolder}${/}mvnw", "test", "-Dtest=${class}#${method}"],
     "java.debugTestMethod": ["${workspaceFolder}${/}mvnw", "test", "-Dtest=${class}#${method}", "-Dmaven.surefire.debug"],
-    "java.testClass": ["${workspaceFolder}${/}mvnw", "test", "-Dtest=${class}"],
+    "java.testClass": [
+        "${workspaceFolder}${/}mvnw",
+        "test",
+        "-Dtest=${class}"
+    ],
+    "java.jdt.ls.vmargs": "-XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx2G -Xms100m -Xlog:disable",
 }

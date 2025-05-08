@@ -20,10 +20,30 @@ statement      : printStmt;
 
 printStmt      : 'print' expression ';' ;
 
-expression     : true | false;
+expression     : logic_or ;
+logic_or       : logic_and ( 'or' logic_and )* ;
+logic_and      : equality ( 'and' equality )* ;
+equality       : comparison ( ( '!=' | '==' ) comparison )* ;
+comparison     : term ( ( '>' | '>=' | '<' | '<=' ) term )* ;
+term           : factor ( ( '-' | '+' ) factor )* ;
+factor         : unary ( ( '/' | '*' ) unary )* ;
 
-true           : 'true';
+unary          : ( '!' | '-' ) unary | primary  ;
+
+
+primary         : number | string | true | false | nil | '(' expression ')';    
+
+string          : STRING ;
+nil             : 'nil';     
+true            : 'true';
 false           : 'false';
+number          : NUMBER;
+
+NUMBER          : DIGIT+ ( '.' DIGIT+ )? ;
+STRING          : '"' (~["\\])* '"' ;
+IDENTIFIER      : ALPHA ( ALPHA | DIGIT )* ;
+fragment ALPHA  : [a-zA-Z_] ;
+fragment DIGIT  : [0-9] ;
 
 // more... 
 WS             : [ \t\r\n]+ -> skip ;

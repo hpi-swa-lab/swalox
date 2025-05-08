@@ -5,7 +5,14 @@
             "name": "LoxMain",
             "request": "launch",
             "mainClass": "de.hpi.swa.lox.cli.LoxMain",
-            "projectName": "de.hpi.swa.lox",
+            "projectName": "lox-language"
+        },
+        {
+            "type": "java",
+            "name": "LoxMain",
+            "request": "launch",
+            "mainClass": "de.hpi.swa.lox.cli.LoxMain",
+            "projectName": "de.hpi.swa.lox"
         },
         {
             "type": "java",
@@ -15,7 +22,7 @@
             "hostName": "localhost",
             "port": 8000,
             "sourceRoots": [
-                "${workspaceFolder}/src/main/java",
+                "${workspaceFolder}/src/main/java"
             ]
         }
     ]

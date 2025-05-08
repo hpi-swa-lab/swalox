@@ -1,3 +1,8 @@
+
+
+
+test:
+	./mvnw -e clean test
 # Just for convenience....
 
 run: classpath

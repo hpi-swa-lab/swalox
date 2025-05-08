@@ -9,9 +9,11 @@ import java.util.Map;
 
 import org.graalvm.launcher.AbstractLanguageLauncher;
 import org.graalvm.options.OptionCategory;
+import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Context.Builder;
-import org.graalvm.polyglot.Source;
+import org.graalvm.polyglot.PolyglotException;
 
+import org.graalvm.polyglot.Source;
 
 public class LoxMain extends AbstractLanguageLauncher {
     public static void main(String[] args) {
@@ -58,28 +60,44 @@ public class LoxMain extends AbstractLanguageLauncher {
     protected void launch(Builder contextBuilder) {
         Source source;
         try (var context = contextBuilder.build()) {
-            
+
             // FOR TESTING
             // command = "print true;";
 
             if (file != null) {
                 try {
                     source = Source.newBuilder("lox", file).build();
-                    context.eval(source);
+                    try {
+                        context.eval(source);
+                    } catch (Exception e) {
+                        printException(e);
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             } else if (command != null) {
-                context.eval("lox", command);
-            } else {
-                while (true) {
-                    System.out.print("> ");
-                    String line = System.console().readLine();
-                    if (line == null) {
-                        break;
-                    }
-                    context.eval("lox", line);
+                try {
+                    context.eval("lox", command);
+                } catch (Exception e) {
+                    printException(e);
                 }
+            } else {
+                startEvalLoop(context);
+            }
+        }
+    }
+
+    private void startEvalLoop(Context context) {
+        while (true) {
+            System.out.print("> ");
+            String line = System.console().readLine();
+            if (line == null) {
+                break;
+            }
+            try {
+                context.eval("lox", line);
+            } catch (Exception e) {
+                printException(e);
             }
         }
     }
@@ -92,5 +110,29 @@ public class LoxMain extends AbstractLanguageLauncher {
     @Override
     protected void printHelp(OptionCategory maxCategory) {
         System.out.println("Usage: lox [option] ... (@filename | command)");
+    }
+
+    public static void printException(Exception e) {
+        if (e instanceof PolyglotException error) {
+            runtimeError(error);
+        } else {
+            System.err.println("Error: " + e.getMessage());
+        }
+    }
+
+    static void runtimeError(PolyglotException error) {
+        if (error.isSyntaxError()) {
+            System.err.println(error.getMessage());
+        } else if (error.isGuestException()) {
+            var sourceLocation = error.getSourceLocation();
+            if (sourceLocation != null) {
+                System.err.println("[line " + sourceLocation.getStartLine() + "] " + "Error: " + error.getMessage());
+            } else {
+                System.err.println("Error: " + error.getMessage());
+            }
+        } else {
+            System.err.println(error.getMessage());
+        }
+
     }
 }

@@ -1,6 +1,12 @@
 # BYOPL 24 -- Lox Truffle Implementation 
 
+
+[![Build Status Github](https://github.com/hpi-swa-teaching/byopl24-00a/actions/workflows/maven.yml/badge.svg)](https://github.com/hpi-swa-teaching/byopl24-00a/actions?query=maven%3ACI)
+
+
 The Lox implementation is developed as part of the Build Your Own Programming Language course at Software Architecture Group, Hasso Plattner Institute, Potsdam. 
+
+
 
 ## Getting Started 
 
