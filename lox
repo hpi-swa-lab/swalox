@@ -1,9 +1,5 @@
 #!/bin/sh
 
-rlwrap ./mvnw -q exec:java
-#!/bin/sh
-# set -x
-
 DIR=$(dirname "$0")
 
 if [ ! -e $DIR/classpath ]; then

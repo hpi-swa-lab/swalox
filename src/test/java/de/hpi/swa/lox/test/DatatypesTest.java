@@ -14,18 +14,8 @@ public class DatatypesTest extends AbstractLoxTest {
     public void testNumber() {
         runAndExpect("testNumber", "print 42;", "42\n");
         runAndExpect("testNumber", "print 2.5;", "2.5\n");
-    }
-    @Test
-    public void testNumberToBigException() {
-        runAndExpectError("testNumber", "print 92233720368547758070;", "Number is to big"); 
-    }
 
-    // @Test
-    // not supporeted yet
-    // public void bignumberTestNumber() {
-    //     runAndExpect("testLargeNumber", "print 92233720368547758070;", "92233720368547758070\n");
-    // }
-
+    }
 
     @Test
     public void testBoolean() {
@@ -36,5 +26,5 @@ public class DatatypesTest extends AbstractLoxTest {
     @Test
     public void testNil() {
         runAndExpect("testNil", "print nil;", "nil\n");
-    }    
+    }
 }

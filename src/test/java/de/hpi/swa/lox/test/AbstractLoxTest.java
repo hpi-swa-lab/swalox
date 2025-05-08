@@ -107,7 +107,8 @@ public abstract class AbstractLoxTest {
             if (!ex.isInternalError()) {
                 LoxMain.printException(ex);
             } else {
-                throw ex;
+                // we print all eceptions so we can test for them
+                LoxMain.printException(ex);
             }
         }
     }

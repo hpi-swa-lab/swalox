@@ -9,13 +9,17 @@ import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.nodes.Node;
 
 import de.hpi.swa.lox.LoxLanguage;
+import de.hpi.swa.lox.runtime.objects.GlobalObject;
 
 @Bind.DefaultExpression("get($node)")
 public final class LoxContext {
-    private final Env env;
+    private final Env env; // Truffle environment
+
+    public GlobalObject globalObject;
 
     public LoxContext(LoxLanguage language, TruffleLanguage.Env env) {
         this.env = env;
+        this.globalObject = new GlobalObject();
     }
 
     private static final ContextReference<LoxContext> REFERENCE = ContextReference.create(LoxLanguage.class);
@@ -31,4 +35,9 @@ public final class LoxContext {
     public OutputStream getOutput() {
         return env.out();
     }
+
+    public GlobalObject getGlobalObject() {
+        return globalObject;
+    }
+
 }

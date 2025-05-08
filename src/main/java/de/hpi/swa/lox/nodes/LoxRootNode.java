@@ -7,8 +7,12 @@ import de.hpi.swa.lox.LoxLanguage;
 
 @NodeInfo(language = "lox", description = "The root of all Lox execution trees")
 public abstract class LoxRootNode extends RootNode {
-    public LoxRootNode(LoxLanguage language, FrameDescriptor frameDescriptor) {
-        super(language, frameDescriptor);
+
+    public LoxLanguage language;
+
+    public LoxRootNode(LoxLanguage lang, FrameDescriptor frameDescriptor) {
+        super(lang, frameDescriptor);
+        language = lang;
     }
 
     @Override

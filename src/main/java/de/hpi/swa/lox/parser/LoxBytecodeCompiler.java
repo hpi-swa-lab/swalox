@@ -1,5 +1,10 @@
 package de.hpi.swa.lox.parser;
 
+import java.math.BigInteger;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Stack;
+
 import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -11,16 +16,20 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import com.oracle.truffle.api.RootCallTarget;
+import com.oracle.truffle.api.bytecode.BytecodeLocal;
 import com.oracle.truffle.api.bytecode.BytecodeParser;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.strings.TruffleString;
 
 import de.hpi.swa.lox.LoxLanguage;
 import de.hpi.swa.lox.bytecode.LoxBytecodeRootNodeGen;
+import de.hpi.swa.lox.parser.LoxParser.AssignmentContext;
+import de.hpi.swa.lox.parser.LoxParser.BlockContext;
 import de.hpi.swa.lox.parser.LoxParser.ComparisonContext;
 import de.hpi.swa.lox.parser.LoxParser.EqualityContext;
 import de.hpi.swa.lox.parser.LoxParser.FactorContext;
 import de.hpi.swa.lox.parser.LoxParser.FalseContext;
+import de.hpi.swa.lox.parser.LoxParser.HackStmtContext;
 import de.hpi.swa.lox.parser.LoxParser.Logic_orContext;
 import de.hpi.swa.lox.parser.LoxParser.NilContext;
 import de.hpi.swa.lox.parser.LoxParser.NumberContext;
@@ -31,6 +40,8 @@ import de.hpi.swa.lox.parser.LoxParser.StringContext;
 import de.hpi.swa.lox.parser.LoxParser.TermContext;
 import de.hpi.swa.lox.parser.LoxParser.TrueContext;
 import de.hpi.swa.lox.parser.LoxParser.UnaryContext;
+import de.hpi.swa.lox.parser.LoxParser.VarDeclContext;
+import de.hpi.swa.lox.parser.LoxParser.VariableExprContext;
 import de.hpi.swa.lox.runtime.objects.Nil;
 
 /**
@@ -42,6 +53,76 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
     protected final Source source;
 
     private final LoxBytecodeRootNodeGen.Builder b;
+
+    private LexicalScope curScope = null;
+
+    private class LexicalScope {
+        final LexicalScope parent;
+        final Map<String, BytecodeLocal> locals;
+        private Stack<Object> currentStore = new Stack<>();
+
+        LexicalScope(LexicalScope parent) {
+            this.parent = parent;
+            locals = new HashMap<>();
+        }
+
+        LexicalScope() {
+            this(null);
+        }
+
+        private BytecodeLocal lookupName(String name) {
+            var scope = this;
+            BytecodeLocal variable;
+            do {
+                variable = scope.locals.get(name);
+                scope = scope.parent;
+            } while (variable == null && scope != null);
+            return variable;
+        }
+
+        public void define(String localName, ParseTree ctx) {
+            if (parent != null) {
+                if (locals.get(localName) != null) {
+                    throw LoxParseError.build(source, ctx, "Variable " + localName + " already defined");
+                }
+                var local = b.createLocal(localName, null);
+                locals.put(localName, local);
+            } else {
+                b.emitLoxDefineGlobalVariable(localName);
+            }
+        }
+
+        public void beginStore(String name) {
+            var variable = lookupName(name);
+            this.currentStore.push(variable);
+            if (variable != null) {
+                b.beginStoreLocal(variable);
+            } else {
+                b.beginLoxWriteGlobalVariable(name);
+            }
+        }
+
+        public void endStore() {
+            var currentStore = this.currentStore.pop();
+            if (currentStore != null) {
+                b.endStoreLocal();
+            } else {
+                b.endLoxWriteGlobalVariable();
+            }
+        }
+
+        public void load(String text) {
+            var variable = lookupName(text);
+            if (variable != null) {
+                b.beginBlock();
+                b.emitLoxCheckLocalDefined(variable);
+                b.emitLoadLocal(variable);
+                b.endBlock();
+            } else {
+                b.emitLoxReadGlobalVariable(text);
+            }
+        }
+    }
 
     public static RootCallTarget parseLox(LoxLanguage language, Source source) {
         BytecodeParser<LoxBytecodeRootNodeGen.Builder> bytecodeParser = (b) -> {
@@ -94,13 +175,15 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
     public Void visitProgram(ProgramContext ctx) {
         beginAttribution(ctx);
         b.beginRoot();
-        var result = super.visitProgram(ctx);
+        curScope = new LexicalScope();
+        super.visitProgram(ctx);
         b.beginReturn();
         b.emitLoadConstant(0);
         b.endReturn();
+        curScope = null;
         b.endRoot();
         endAttribution();
-        return result;
+        return null;
     }
 
     @Override
@@ -117,10 +200,80 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
     public Void visitPrintStmt(PrintStmtContext ctx) {
         beginAttribution(ctx);
         b.beginLoxPrint();
-        var result = super.visitPrintStmt(ctx);
+        super.visitPrintStmt(ctx);
         b.endLoxPrint();
         endAttribution();
-        return result;
+        return null;
+    }
+
+    // Just, a sandbox for playing around with bytecodes
+    @Override
+    public Void visitHackStmt(HackStmtContext ctx) {
+
+        b.beginBlock();
+        BytecodeLocal local = b.createLocal();
+
+        b.beginStoreLocal(local);
+        b.emitLoadConstant(3);
+        b.endStoreLocal();
+
+        b.beginLoxPrint();
+        b.emitLoadLocal(local);
+        b.endLoxPrint();
+
+        b.beginBlock();
+
+        BytecodeLocal local2 = b.createLocal();
+
+        b.beginStoreLocal(local2);
+        b.emitLoadConstant(4);
+        b.endStoreLocal();
+
+        b.beginLoxPrint();
+        b.emitLoadLocal(local2);
+        b.endLoxPrint();
+        b.endBlock();
+
+        b.beginLoxPrint();
+        b.emitLoadLocal(local);
+        b.endLoxPrint();
+
+        b.endBlock();
+        return null;
+    }
+
+    @Override
+    public Void visitHaltStmt(LoxParser.HaltStmtContext ctx) {
+        b.emitLoxHalt();
+        return null;
+    }
+
+    @Override
+    public Void visitBlock(BlockContext ctx) {
+        b.beginBlock();
+        curScope = new LexicalScope(curScope);
+        super.visitBlock(ctx);
+        curScope = curScope.parent;
+        b.endBlock();
+        return null;
+    }
+
+    @Override
+    public Void visitAssignment(AssignmentContext ctx) {
+        final boolean isAssignment = ctx.IDENTIFIER() != null;
+        String text = null;
+        if (isAssignment) {
+            b.beginBlock(); // for grouping the the storing an the loading together
+            text = ctx.IDENTIFIER().getText();
+            curScope.beginStore(text);
+        }
+        super.visitAssignment(ctx);
+        if (isAssignment) {
+            curScope.endStore();
+            curScope.load(text); // for the value of the assignment
+            b.endBlock();
+        }
+        return null;
     }
 
     @Override
@@ -331,6 +484,24 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
         return null;
     }
 
+    @Override
+    public Void visitVarDecl(VarDeclContext ctx) {
+        var localName = ctx.IDENTIFIER().getText();
+        curScope.define(localName, ctx);
+        if (ctx.expression() != null) {
+            curScope.beginStore(localName);
+            visit(ctx.expression());
+            curScope.endStore();
+        }
+        return null;
+    }
+
+    @Override
+    public Void visitVariableExpr(VariableExprContext ctx) {
+        curScope.load(ctx.getText());
+        return null;
+    }
+
     // Data Types
 
     @Override
@@ -341,9 +512,9 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
             try {
                 b.emitLoadConstant(Long.parseLong(ctx.getText()));
             } catch (NumberFormatException e) {
-                throw LoxParseError.build(source, ctx, "Number is to big");
+                // throw LoxParseError.build(source, ctx, "Number is to big");
                 // for big numbers would use need to use BigInteger
-                // b.emitLoadConstant(new BigInteger(ctx.getText()));
+                b.emitLoadConstant(new BigInteger(ctx.getText()));
             }
         }
         return super.visitNumber(ctx);

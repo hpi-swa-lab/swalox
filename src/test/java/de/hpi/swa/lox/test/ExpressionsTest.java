@@ -1,20 +1,23 @@
 package de.hpi.swa.lox.test;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+
 import org.junit.Test;
 
 public class ExpressionsTest extends AbstractLoxTest {
-    
+
     @Test
     public void testLogicalNot() {
         runAndExpect("testLogical", "print !true;", "false\n");
         runAndExpect("testLogical", "print !false;", "true\n");
     }
-    
+
     @Test
     public void testLogicalNotError() {
         runAndExpectError("testLogical", "print !1;", "Type Error");
     }
-    
+
     @Test
     public void testUnaryMinus() {
         runAndExpect("testNegation", "print -1;", "-1\n");
@@ -52,7 +55,6 @@ public class ExpressionsTest extends AbstractLoxTest {
         runAndExpectError("testLogicalAnd", "print true and 1;", "Type Error");
     }
 
-
     @Test
     public void testArithmetic() {
         runAndExpect("testArithmetic", "print 1 + 2;", "3\n");
@@ -62,6 +64,13 @@ public class ExpressionsTest extends AbstractLoxTest {
         runAndExpect("testArithmetic", "print 1 / 2;", "0.5\n");
     }
 
+    @Test
+    public void testFloatArithmetic() {
+        runAndExpect("testArithmetic", "print 1.0 + 2.0;", "3.0\n");
+        runAndExpect("testArithmetic", "print 2.5 - 1;", "1.5\n");
+        runAndExpect("testArithmetic", "print 2 * 2.5;", "5.0\n");
+        runAndExpect("testArithmetic", "print 1 / 2;", "0.5\n");
+    }
 
     @Test
     public void testArithmeticError() {
@@ -78,8 +87,50 @@ public class ExpressionsTest extends AbstractLoxTest {
         runAndExpect("testComparison", "print 1 > 2;", "false\n");
         runAndExpect("testComparison", "print 1 >= 2;", "false\n");
         runAndExpect("testComparison", "print 1 == 2;", "false\n");
+        runAndExpect("testComparison", "print 1 == 1;", "true\n");
         runAndExpect("testComparison", "print 1 != 2;", "true\n");
+        runAndExpect("testComparison", "print 1 != 1;", "false\n");
     }
+
+    @Test
+    public void testFloatComparison() {
+        runAndExpect("testComparison", "print 1.0 < 2;", "true\n");
+        runAndExpect("testComparison", "print 1 < 2.0;", "true\n");
+        runAndExpect("testComparison", "print 1.0 < 2.0;", "true\n");
+
+        runAndExpect("testComparison", "print 1.0 <= 2;", "true\n");
+        runAndExpect("testComparison", "print 1 <= 2.0;", "true\n");
+        runAndExpect("testComparison", "print 1.0 <= 2.0;", "true\n");
+
+        runAndExpect("testComparison", "print 1.0 > 2;", "false\n");
+        runAndExpect("testComparison", "print 1 > 2.0;", "false\n");
+        runAndExpect("testComparison", "print 1.0 > 2.0;", "false\n");
+
+        runAndExpect("testComparison", "print 1.0 >= 2;", "false\n");
+        runAndExpect("testComparison", "print 1 >= 2.0;", "false\n");
+        runAndExpect("testComparison", "print 1.0 >= 2.0;", "false\n");
+
+        runAndExpect("testComparison", "print 1.0 == 2;", "false\n");
+        runAndExpect("testComparison", "print 1 == 2.0;", "false\n");
+        runAndExpect("testComparison", "print 1.0 == 2.0;", "false\n");
+
+        runAndExpect("testComparison", "print 1.0 != 2;", "true\n");
+        runAndExpect("testComparison", "print 1 != 2.0;", "true\n");
+        runAndExpect("testComparison", "print 1.0 != 2.0;", "true\n");
+
+        runAndExpect("testComparison", "print 1.0 == 1.0;", "true\n");
+    }
+
+    // @Test
+    // public void testStringComparison() {
+    // runAndExpect("testComparison", "print \"a\" == \"a\";", "true\n");
+    // runAndExpect("testComparison", "print \"a\" != \"b\";", "true\n");
+    // runAndExpect("testComparison", "print \"a\" < \"b\";", "true\n");
+    // runAndExpect("testComparison", "print \"a\" <= \"b\";", "true\n");
+    // runAndExpect("testComparison", "print \"a\" > \"b\";", "false\n");
+    // runAndExpect("testComparison", "print \"a\" >= \"b\";", "false\n");
+    // runAndExpect("testComparison", "print \"a\" == \"b\";", "false\n");
+    // }
 
     @Test
     public void testComparisonError() {
@@ -97,12 +148,30 @@ public class ExpressionsTest extends AbstractLoxTest {
         runAndExpect("testPrecedence", "print 1 * 2 + 3;", "5\n");
         runAndExpect("testPrecedence", "print 1 + 2 == 3;", "true\n");
         runAndExpect("testPrecedence", "print 3 == 1 + 2;", "true\n");
+
+        runAndExpect("testPrecedence", "print 1 + 6 / 3;", "3.0\n");
+        runAndExpect("testPrecedence", "print 6 / 3 + 1;", "3.0\n");
+
     }
 
     @Test
     public void testExpressionGrouping() {
         runAndExpect("testExpressionGrouping", "print (1 + 2) * 3;", "9\n");
         runAndExpect("testExpressionGrouping", "print 1 + (2 * 3);", "7\n");
+    }
+
+    // for debugging
+    // e.g. nodes.getFirst().dump()
+    @Test
+    public void testAddExpressions() {
+        run("print 2 * (3 + 4);");
+    }
+
+
+    @Test
+    public void testAssignmentExpressionValue() {
+        runAndExpect("testExpressionGrouping", "var a; print a = 3;", "3\n");
+
     }
 
 }
