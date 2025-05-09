@@ -6,7 +6,6 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.strings.TruffleString;
 
 import de.hpi.swa.lox.LoxLanguage;
-import de.hpi.swa.lox.runtime.objects.Nil;
 
 public abstract class NumberBuiltInNode extends BuiltInNodeWithArgs {
 

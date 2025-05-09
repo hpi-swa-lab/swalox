@@ -1,0 +1,84 @@
+// based on https://github.com/smarr/are-we-fast-yet/blob/master/benchmarks/JavaScript/towers.js
+
+load("benchmark.lox");
+
+
+class TowersDisk {
+    init(size) {
+        this.size = size;
+        this.next = nil;
+    }
+}
+
+class Towers < Benchmark {
+    init() {
+        this.piles = nil;
+        this.movesDone = 0;
+    }
+
+    benchmark() {
+        this.piles = [];
+        this.piles[0] = nil;
+        this.piles[1] = nil;
+        this.piles[2] = nil;
+
+        this.buildTowerAt(0, 13);
+        this.movesDone = 0;
+        this.moveDisks(13, 0, 1);
+        return this.movesDone;
+    }
+
+    verifyResult(result) {
+        return 8191 == result;
+    }
+
+    pushDisk(disk, pile) {
+        var top = this.piles[pile];
+        // print "Pushing disk of size " + String(disk.size) + " to pile " + String(top) + " (" + String(pile) + ")";
+        if (top != nil and disk.size >= top.size) {
+            print "ERROR Cannot put a big disk on a smaller one";
+            return;    
+        }
+
+        disk.next = top;
+        this.piles[pile] = disk;
+    }
+
+    popDiskFrom(pile) {
+        var top = this.piles[pile];
+        if (top == nil) {
+            print "ERROR Attempting to remove a disk from an empty pile";
+        }
+
+        this.piles[pile] = top.next;
+        top.next = nil;
+        return top;
+    }
+
+    moveTopDisk(fromPile, toPile) {
+        this.pushDisk(this.popDiskFrom(fromPile), toPile);
+        this.movesDone = this.movesDone + 1;
+    }
+
+    buildTowerAt(pile, disks) {
+        // print "Building tower at pile " + String(pile) + " with " + String(disks) + " disks";
+        for (var i = disks; i >= 0; i = i - 1) {
+            this.pushDisk(TowersDisk(i), pile);
+        }
+    }
+
+    moveDisks(disks, fromPile, toPile) {
+        if (disks == 1) {
+            this.moveTopDisk(fromPile, toPile);
+        } else {
+            var otherPile = 3 - fromPile - toPile;
+            this.moveDisks(disks - 1, fromPile, otherPile);
+            this.moveTopDisk(fromPile, toPile);
+            this.moveDisks(disks - 1, otherPile, toPile);
+        }
+    }
+}
+
+
+return Towers();
+  

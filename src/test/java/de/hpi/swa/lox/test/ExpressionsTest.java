@@ -30,8 +30,8 @@ public class ExpressionsTest extends AbstractLoxTest {
     }
 
     @Test
-    public void testLogicalOrError() {
-        runAndExpectError("testLogicalOr", "print true or 1;", "Type Error");
+    public void testLogicalOrConversion() {
+        runAndExpect("testLogicalOr", "print true or 1;", "true\n");
     }
 
     @Test
@@ -43,8 +43,8 @@ public class ExpressionsTest extends AbstractLoxTest {
     }
 
     @Test
-    public void testLogicalAndError() {
-        runAndExpectError("testLogicalAnd", "print true and 1;", "Type Error");
+    public void testLogicalAndConversion() {
+        runAndExpect("testLogicalAnd", "print true and 1;", "true\n");
     }
 
     @Test
@@ -131,7 +131,7 @@ public class ExpressionsTest extends AbstractLoxTest {
         runAndExpectError("testComparison", "print 1 > true;", "Type Error");
         runAndExpectError("testComparison", "print 1 >= true;", "Type Error");
         runAndExpect("testComparison", "print 1 == true;", "false\n");  
-        runAndExpectError("testComparison", "print 1 != true;", "Type Error");
+        runAndExpect("testComparison", "print 1 != true;", "true\n");
     }
 
     @Test

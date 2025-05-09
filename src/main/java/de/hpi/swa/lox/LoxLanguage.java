@@ -12,11 +12,12 @@ import com.oracle.truffle.api.source.Source;
 import de.hpi.swa.lox.nodes.BuiltInNode;
 import de.hpi.swa.lox.nodes.ClockBuiltInNodeGen;
 import de.hpi.swa.lox.nodes.LoadBuiltInNodeGen;
+import de.hpi.swa.lox.nodes.MathRoundBuiltInNodeGen;
 import de.hpi.swa.lox.nodes.NumberBuiltInNodeGen;
 import de.hpi.swa.lox.nodes.StringBuiltInNodeGen;
 import de.hpi.swa.lox.parser.LoxBytecodeCompiler;
 import de.hpi.swa.lox.runtime.LoxContext;
-
+ 
 @Bind.DefaultExpression("get($node)")
 @TruffleLanguage.Registration(id = LoxLanguage.ID)
 public class LoxLanguage extends TruffleLanguage<LoxContext> {
@@ -34,7 +35,8 @@ public class LoxLanguage extends TruffleLanguage<LoxContext> {
                     "clock", ClockBuiltInNodeGen.create(this),
                     "Number", NumberBuiltInNodeGen.create(this),
                     "String", StringBuiltInNodeGen.create(this),
-                    "load", LoadBuiltInNodeGen.create(this)
+                    "load", LoadBuiltInNodeGen.create(this),
+                    "round", MathRoundBuiltInNodeGen.create(this)
                 );
         }
         return builtins;

@@ -191,6 +191,9 @@
             </executions>
             <configuration>
               <imageName>lox</imageName>
+              <!-- <buildArgs>
+                <buildArg>-H:+IncludeNodeSourcePositions</buildArg>
+              </buildArgs> -->
               <mainClass>de.hpi.swa.lox.cli.LoxMain</mainClass>
               <fallback>false</fallback>
               <verbose>true</verbose>

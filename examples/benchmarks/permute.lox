@@ -1,0 +1,47 @@
+load("benchmark.lox");
+
+class Permute < Benchmark {
+    init() {
+        super.init();
+        this.count = 0;
+        this.v = nil;
+        this.n = 6;
+    }
+
+    benchmark() {
+        this.count = 0;
+        this.v = [];
+        for (var i = 0; i < this.n; i = i + 1) {
+            this.v[i] = i + 1;  
+        }
+        this.permute(0, this.n);
+        return this.count;
+    }
+
+    verifyResult(result) {
+        return result == 720;
+    }
+
+    // TODO not yet standart of "Are we fast yet", so this not comparable
+    permute(i, n) {
+        var j;
+        if (i == n) {
+            this.count = this.count + 1;
+            // print "" + this.count + " " + this.v;
+        } else {
+            for (j = i; j < n; j = j + 1) {
+                this.swap(i, j);          
+                this.permute(i+1, n);
+                this.swap(i, j);
+            }
+        }
+    } 
+
+    swap(i, j) {
+        var tmp = this.v[i];
+        this.v[i] = this.v[j];
+        this.v[j] = tmp;
+    }
+}
+
+return Permute();

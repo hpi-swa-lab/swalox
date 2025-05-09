@@ -1,4 +1,12 @@
+// based on https://github.com/smarr/are-we-fast-yet/blob/master/benchmarks/JavaScript/benchmark.js
+
+
 class Benchmark {
+
+    init() {
+      // "subclass responsibility";
+    }
+    
     innerBenchmarkLoop(innerIterations) {
       for (var i = 0; i < innerIterations; i = i + 1) {
         if (!this.verifyResult(this.benchmark())) {

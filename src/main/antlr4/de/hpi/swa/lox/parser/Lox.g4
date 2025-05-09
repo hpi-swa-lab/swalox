@@ -52,10 +52,10 @@ block          : '{' declaration* '}' ;
 
 expression     : assignment ;
 
-assignment     : ( call '.' )? IDENTIFIER '=' assignment
+assignment     : ( left=arrayExpr '.' )? IDENTIFIER '=' assignment
                | arrayAssignment ;
 
-arrayAssignment    : left=variableExpr '[' index=expression ']' '=' right=assignment
+arrayAssignment    : left=arrayExpr '[' index=expression ']' '=' right=assignment
                | other=logic_or;
 
 logic_or       : logic_and ( 'or' logic_and )* ;
@@ -65,17 +65,19 @@ comparison     : term ( ( '>' | '>=' | '<' | '<=' ) term )* ;
 term           : factor ( ( '-' | '+' ) factor )* ;
 factor         : unary ( ( '/' | '*' ) unary )* ;
 
-unary          : ( '!' | '-' ) unary | call;
+unary          : ( '!' | '-' ) unary | arrayExpr;
+
+arrayExpr       : left=call ('[' expression ']')*;
+
 call           : primary callArguments* ;
 
 callArguments : '(' arguments? ')' | '.' IDENTIFIER;
 
-primary         : number | string | true | false | nil | array |  superExpr | arrayExpr | variableExpr | '(' expression ')' ;
+primary         : number | string | true | false | nil | array |  superExpr | variableExpr | '(' expression ')' ;
 
 superExpr   :   'super' '.' IDENTIFIER;
 
 variableExpr    : IDENTIFIER;
-arrayExpr       : left=variableExpr '[' index=expression ']';
 
 array : '[]';
 

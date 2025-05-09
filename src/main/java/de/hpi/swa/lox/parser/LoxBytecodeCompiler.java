@@ -77,18 +77,19 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
 
     private LexicalScope curScope = null;
 
-    private record LocalVariable(BytecodeLocal local, int index) {}
+    private record LocalVariable(BytecodeLocal local, int index) {
+    }
 
     private class LexicalScope {
         public int maxFrameLevel;
         final LexicalScope parent;
-        boolean isFunction; 
+        boolean isFunction;
         final Map<String, BytecodeLocal> locals;
 
         private Stack<LocalVariable> currentStore = new Stack<>();
 
-        LexicalScope(LexicalScope parent, boolean isFunction) {            
-            this.maxFrameLevel = 0; 
+        LexicalScope(LexicalScope parent, boolean isFunction) {
+            this.maxFrameLevel = 0;
             this.parent = parent;
             this.isFunction = isFunction;
             locals = new HashMap<>();
@@ -120,10 +121,10 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
                     isNonLocal = true;
                 }
                 scope = scope.parent;
-                
-            } while (variable == null && scope != null); 
-            
-            return variable != null ? new LocalVariable(variable, -1) : null;  
+
+            } while (variable == null && scope != null);
+
+            return variable != null ? new LocalVariable(variable, -1) : null;
         }
 
         public void define(String localName, ParseTree ctx) {
@@ -181,13 +182,13 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
                     // todo: check for defition of non-locally declared variables does not work yet
                     // idea: catch the error and throw a custom erorr instead
                     b.beginLoxCheckNonLocalDefined(variable.local());
-                        b.emitLoxLoadMaterialzedFrameN(variable.index());
+                    b.emitLoxLoadMaterialzedFrameN(variable.index());
                     b.endLoxCheckNonLocalDefined();
                     b.beginLoadLocalMaterialized(variable.local());
-                        b.emitLoxLoadMaterialzedFrameN(variable.index());
+                    b.emitLoxLoadMaterialzedFrameN(variable.index());
                     b.endLoadLocalMaterialized();
                     b.endBlock();
-                     
+
                 }
             } else {
                 b.emitLoxReadGlobalVariable(text);
@@ -196,15 +197,16 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
 
         void updateMaxScope(int level) {
             this.maxFrameLevel = Math.max(curScope.maxFrameLevel, level);
-            if (this.parent != null) {                
+            if (this.parent != null) {
                 if (this.isFunction) {
                     // make sure the parent also keeps track of deep enough levels of scope
-                    this.parent.updateMaxScope(level - 1); 
+                    this.parent.updateMaxScope(level - 1);
                 } else {
-                    // non parent functions have the same level, as we count frames and not block scopes
-                    this.parent.updateMaxScope(level); 
+                    // non parent functions have the same level, as we count frames and not block
+                    // scopes
+                    this.parent.updateMaxScope(level);
                 }
-                
+
             }
         }
 
@@ -351,6 +353,9 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
 
     @Override
     public Void visitForStmt(ForStmtContext ctx) {
+        // scope for i, etc...
+        curScope = new LexicalScope(curScope);
+        b.beginBlock();
         ParserRuleContext init = ctx.varDecl();
         if (init == null) {
             init = ctx.exprStmt();
@@ -371,6 +376,8 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
             visit(ctx.increment);
         b.endBlock();
         b.endWhile();
+        curScope = curScope.parent;
+        b.endBlock();
         return null;
     }
 
@@ -379,65 +386,65 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
     public Void visitHackStmt(HackStmtContext ctx) {
 
         // b.beginBlock();
-        //     BytecodeLocal local = b.createLocal();
+        // BytecodeLocal local = b.createLocal();
 
-        //     b.beginStoreLocal(local);
-        //         b.emitLoadConstant(3);
-        //     b.endStoreLocal();
+        // b.beginStoreLocal(local);
+        // b.emitLoadConstant(3);
+        // b.endStoreLocal();
 
-        //     b.beginLoxPrint();
-        //         b.emitLoadLocal(local);
-        //     b.endLoxPrint();
+        // b.beginLoxPrint();
+        // b.emitLoadLocal(local);
+        // b.endLoxPrint();
 
-        //     b.beginBlock();
+        // b.beginBlock();
 
-        //         BytecodeLocal local2 = b.createLocal();
+        // BytecodeLocal local2 = b.createLocal();
 
-        //         b.beginStoreLocal(local2);
-        //             b.emitLoadConstant(4);
-        //         b.endStoreLocal();
+        // b.beginStoreLocal(local2);
+        // b.emitLoadConstant(4);
+        // b.endStoreLocal();
 
-        //         b.beginLoxPrint();
-        //             b.emitLoadLocal(local2);
-        //         b.endLoxPrint();
-        //     b.endBlock();
+        // b.beginLoxPrint();
+        // b.emitLoadLocal(local2);
+        // b.endLoxPrint();
+        // b.endBlock();
 
-        //     b.beginLoxPrint();
-        //         b.emitLoadLocal(local);
-        //     b.endLoxPrint();
+        // b.beginLoxPrint();
+        // b.emitLoadLocal(local);
+        // b.endLoxPrint();
 
         // b.endBlock();
 
         b.beginBlock();
 
-            BytecodeLocal x = b.createLocal();
-            BytecodeLocal f = b.createLocal();
+        BytecodeLocal x = b.createLocal();
+        BytecodeLocal f = b.createLocal();
 
-            b.beginStoreLocal(x);
-                b.emitLoadConstant(41L); // loccal variable x
+        b.beginStoreLocal(x);
+        b.emitLoadConstant(41L); // loccal variable x
         b.endStoreLocal();
 
-            b.beginStoreLocal(f);
-                b.emitMaterializeFrame(); // store a reference to the current frame in f
-            b.endStoreLocal();
+        b.beginStoreLocal(f);
+        b.emitMaterializeFrame(); // store a reference to the current frame in f
+        b.endStoreLocal();
 
-            b.beginStoreLocalMaterialized(x); // store value in x in frame f
+        b.beginStoreLocalMaterialized(x); // store value in x in frame f
 
-                b.emitLoadLocal(f); // use reference to current frame
+        b.emitLoadLocal(f); // use reference to current frame
 
-                b.beginLoxAdd();
-                    b.beginLoadLocalMaterialized(x); // load materialized x from frame f
-                        b.emitLoadLocal(f);
-                    b.endLoadLocalMaterialized();
-                    b.emitLoadConstant(1L);
-                b.endLoxAdd();
+        b.beginLoxAdd();
+        b.beginLoadLocalMaterialized(x); // load materialized x from frame f
+        b.emitLoadLocal(f);
+        b.endLoadLocalMaterialized();
+        b.emitLoadConstant(1L);
+        b.endLoxAdd();
 
-            b.endStoreLocalMaterialized();
+        b.endStoreLocalMaterialized();
 
         b.beginLoxPrint();
-                b.emitLoadLocal(x);
+        b.emitLoadLocal(x);
         b.endLoxPrint();
-    
+
         b.endBlock();
 
         return null;
@@ -461,14 +468,14 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
 
     @Override
     public Void visitAssignment(AssignmentContext ctx) {
-        final boolean isCall = ctx.call() != null;
+        final boolean isCall = ctx.left != null;
         final boolean isAssignment = ctx.IDENTIFIER() != null;
         if (isCall) {
             String name = ctx.IDENTIFIER().getText();
             b.beginBlock(); // for grouping the the storing an the loading together
             b.beginLoxWriteProperty(name);
-                visitCall(ctx.call());
-                visitAssignment(ctx.assignment());
+            visit(ctx.left);
+            visitAssignment(ctx.assignment());
             b.endLoxWriteProperty();
             b.endBlock();
         } else {
@@ -485,7 +492,7 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
                 b.endBlock();
             }
         }
-        return null;    
+        return null;
     }
 
     @Override
@@ -680,6 +687,7 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
                     break;
                 case "!":
                     b.beginLoxNegate();
+                    b.beginLoxIsTruthy();
                     break;
             }
             visitUnary(ctx.unary());
@@ -688,6 +696,7 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
                     b.endLoxUnaryMinus();
                     break;
                 case "!":
+                    b.endLoxIsTruthy();
                     b.endLoxNegate();
                     break;
             }
@@ -699,7 +708,7 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
     @Override
     public Void visitVarDecl(VarDeclContext ctx) {
         var localName = ctx.IDENTIFIER().getText();
-        // TODO: check for reserved words, e.g. super, this, etc.   
+        // TODO: check for reserved words, e.g. super, this, etc.
         curScope.define(localName, ctx);
         if (ctx.expression() != null) {
             curScope.beginStore(localName);
@@ -768,10 +777,15 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
 
     @Override
     public Void visitArrayExpr(ArrayExprContext ctx) {
-        b.beginLoxReadArray();
+        var expressions = ctx.expression();
+        for (int i = expressions.size() - 1; i >= 0; i -= 1) {
+            b.beginLoxReadArray();
+        }
         visit(ctx.left);
-        visit(ctx.index);
-        b.endLoxReadArray();
+        for (int i = 0; i < expressions.size(); i += 1) {
+            visit(expressions.get(i));
+            b.endLoxReadArray();
+        }
         return null;
     }
 
@@ -793,7 +807,7 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
     protected final List<TerminalNode> enterFunction(FunctionContext ctx) {
         List<TerminalNode> result = new ArrayList<>();
 
-        curScope = new LexicalScope(curScope, true);       
+        curScope = new LexicalScope(curScope, true);
         ParametersContext parameters = ctx.parameters();
 
         if (parameters != null) {
@@ -809,7 +823,6 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
     protected final void exitFunction() {
         curScope = curScope.parent;
     }
-
 
     @Override
     public Void visitReturnStmt(ReturnStmtContext ctx) {
@@ -830,7 +843,7 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
         curScope.define(name, ctx); // declare the function in the outer scope
         // actually store the function in the outer scope
         curScope.beginStore(name);
-            visitFunction(function);
+        visitFunction(function);
         curScope.endStore();
         return null;
     }
@@ -839,31 +852,31 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
     public Void visitFunction(FunctionContext function) {
         String name = function.IDENTIFIER().getText();
         b.beginRoot();
-            b.beginBlock();
-                List<TerminalNode> parameters = enterFunction(function); // enter the function scope
-                if (function.getParent() instanceof ClassDeclContext) {
-                    curScope.define("this", function);
-                    curScope.beginStore("this");
-                        b.emitLoxLoadThis();
-                    curScope.endStore();
-                }
-                for (int i = 0; i < parameters.size(); i++) {
-                    var param = parameters.get(i);
-                    var paramName = param.getText();
-                    curScope.define(paramName, function); // define each parameter in the innner scope
-                    curScope.beginStore(paramName);  
-                        b.emitLoxLoadArgument(i); // and fill it with arguments from the stack
-                    curScope.endStore();
-                }
-                b.beginBlock();
-                    visit(function.block()); // visit the function body
-                    exitFunction();
-                b.endBlock();
-            b.endBlock();
+        b.beginBlock();
+        List<TerminalNode> parameters = enterFunction(function); // enter the function scope
+        if (function.getParent() instanceof ClassDeclContext) {
+            curScope.define("this", function);
+            curScope.beginStore("this");
+            b.emitLoxLoadThis();
+            curScope.endStore();
+        }
+        for (int i = 0; i < parameters.size(); i++) {
+            var param = parameters.get(i);
+            var paramName = param.getText();
+            curScope.define(paramName, function); // define each parameter in the innner scope
+            curScope.beginStore(paramName);
+            b.emitLoxLoadArgument(i); // and fill it with arguments from the stack
+            curScope.endStore();
+        }
+        b.beginBlock();
+        visit(function.block()); // visit the function body
+        exitFunction();
+        b.endBlock();
+        b.endBlock();
 
-            b.beginReturn();
-                b.emitLoadConstant(Nil.INSTANCE); // default return nil
-            b.endReturn();
+        b.beginReturn();
+        b.emitLoadConstant(Nil.INSTANCE); // default return nil
+        b.endReturn();
 
         LoxRootNode node = b.endRoot();
         node.name = name;
@@ -874,22 +887,22 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
     @Override
     public Void visitCall(CallContext ctx) {
         var calls = ctx.callArguments();
-        for(int i = calls.size() - 1; i >= 0; i -= 1) {
+        for (int i = calls.size() - 1; i >= 0; i -= 1) {
             CallArgumentsContext callArguments = calls.get(i);
             if (callArguments.IDENTIFIER() == null) {
-                b.beginLoxCall();     
+                b.beginLoxCall();
             } else {
                 String name = callArguments.IDENTIFIER().getText();
                 b.beginLoxReadProperty(name);
-            }   
+            }
         }
         super.visit(ctx.primary());
-        for(CallArgumentsContext callArguments : calls) {
+        for (CallArgumentsContext callArguments : calls) {
             if (callArguments.IDENTIFIER() == null) {
                 ArgumentsContext args = callArguments.arguments();
                 if (args != null) {
                     List<ExpressionContext> expressions = args.expression();
-                    for(int i= 0; i < expressions.size(); i++) {
+                    for (int i = 0; i < expressions.size(); i++) {
                         visit(expressions.get(i));
                     }
                 }
@@ -899,7 +912,7 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
                 b.endLoxReadProperty();
             }
         }
-        return null;    
+        return null;
     }
 
     @Override
@@ -908,25 +921,25 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
         curScope.define(name, ctx);
         curScope.beginStore(name);
         curScope = new LexicalScope(curScope);
-        curScope.define("super", ctx);  
-        
-        b.beginLoxDeclareClass(name);       
-            b.beginBlock();
-            if (ctx.extends_ != null) {
-                String superclassName = ctx.extends_.getText();                
-                curScope.beginStore("super");  
-                    curScope.load(superclassName);
-                curScope.endStore();
-            } else {
-                curScope.beginStore("super");  
-                    b.emitLoadConstant(Nil.INSTANCE);
-                curScope.endStore();
-            }
-            curScope.load("super");
-            b.endBlock();
-            for (var fun : ctx.function()) {
-                visitFunction(fun);
-            }
+        curScope.define("super", ctx);
+
+        b.beginLoxDeclareClass(name);
+        b.beginBlock();
+        if (ctx.extends_ != null) {
+            String superclassName = ctx.extends_.getText();
+            curScope.beginStore("super");
+            curScope.load(superclassName);
+            curScope.endStore();
+        } else {
+            curScope.beginStore("super");
+            b.emitLoadConstant(Nil.INSTANCE);
+            curScope.endStore();
+        }
+        curScope.load("super");
+        b.endBlock();
+        for (var fun : ctx.function()) {
+            visitFunction(fun);
+        }
         b.endLoxDeclareClass();
 
         curScope = curScope.parent;
@@ -937,16 +950,15 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
     @Override
     public Void visitSuperExpr(SuperExprContext ctx) {
         String name = ctx.IDENTIFIER().getText();
-        b.beginLoxReadSuper(name);  
-            b.emitLoxLoadThis();
-            curScope.load("super");
+        b.beginLoxReadSuper(name);
+        b.emitLoxLoadThis();
+        curScope.load("super");
         b.endLoxReadSuper();
         return null;
     }
 
-
     // Attributions
-    
+
     private void beginAttribution(ParseTree tree) {
         beginAttribution(getStartIndex(tree), getEndIndex(tree));
     }

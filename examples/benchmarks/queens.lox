@@ -1,0 +1,74 @@
+load("benchmark.lox");
+
+class Queens < Benchmark {
+    init() {
+        super.init();
+        this.freeMaxs = nil;
+        this.freeRows = nil;
+        this.freeMins = nil;
+        this.queenRows = nil;
+    }
+
+    benchmark() {
+        var result = true;
+        for (var i = 0; i < 10; i = i + 1) {
+            result = result and this.queens();
+        }
+        return result;
+    }
+
+    verifyResult(result) {
+        return result;
+    }
+
+    queens() {
+        this.freeRows = [];
+        this.freeMaxs = [];
+        this.freeMins = [];
+        this.queenRows = [];
+
+        for (var i = 0; i < 8; i = i + 1) {
+            this.freeRows[i] = true;
+            this.queenRows[i] = -1;
+        }
+
+        for (var i = 0; i < 16; i = i + 1) {
+            this.freeMaxs[i] = true;
+            this.freeMins[i] = true;
+        }
+
+        return this.placeQueen(0);
+    }
+
+    placeQueen(c) {
+        // print "placeQueen(" + c + ")";
+        for (var r = 0; r < 8; r = r + 1) {
+            if (this.getRowColumn(r, c)) {
+                this.queenRows[r] = c;
+                this.setRowColumn(r, c, false);
+
+                if (c == 7) {
+                    return true;
+                }
+
+                if (this.placeQueen(c + 1)) {
+                    return true;
+                }
+                this.setRowColumn(r, c, true);
+            }
+        }
+        return false;
+    }
+
+    getRowColumn(r, c) {
+        return this.freeRows[r] and this.freeMaxs[c + r] and this.freeMins[c - r + 7];
+    }
+
+    setRowColumn(r, c, v) {
+        this.freeRows[r] = v;
+        this.freeMaxs[c + r] = v;
+        this.freeMins[c - r + 7] = v;
+    }
+}
+
+return Queens();

@@ -19,7 +19,6 @@ public class ControlTest extends AbstractLoxTest {
         
     }
 
-
     @Test
     public void testIfThenElseCondition() {
         runAndExpect("if true", "if(true) print 1; else print 2;", "1\n");    
@@ -39,6 +38,12 @@ public class ControlTest extends AbstractLoxTest {
     }
 
     @Test
+    public void testScopeInForLoop() {
+        runAndExpect("scope i", 
+        "var i = 8; for(var i=1; i <= 3; i = i + 1) {} print i;", "8\n");            
+    }
+
+    @Test
     public void testEmptyForLoop() {
         runAndExpect("print 1 2 3", "var i = 1; for(;i <= 3;) { print i;i = i + 1;}", "1\n2\n3\n");            
     }
@@ -48,6 +53,15 @@ public class ControlTest extends AbstractLoxTest {
     @Test
     public void testForNonVarInitLoop() {
         runAndExpect("print 1 2 3", "var i; for(i=1; i <= 3; i = i + 1) {print i;}", "1\n2\n3\n");            
+    }
+
+    @Test
+    public void testShortCircuitedLogicalOperators() {
+        runAndExpect("init", "fun a() { print \"a\"; return true;} fun b() { print \"b\"; return false;}", "");
+        runAndExpect("a and b", "a() and b(); ", "a\nb\n");            
+        runAndExpect("b and a", " b() and a(); ", "b\n");            
+        runAndExpect("a or b", "a() or b(); ", "a\n");
+        runAndExpect("b or a", "b() or a(); ", "b\na\n");
     }
 
 

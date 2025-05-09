@@ -42,6 +42,26 @@ public class ArrayTest extends AbstractLoxTest {
         runAndExpect("print length", "var a = []; a[10]=1; print a.length;", "11\n");
     }
 
+    @Test
+    public void testArraysAsObjectProperties() {
+        runAndExpect("arrays as properties", 
+            "class O {} \n" +
+            "var o = O();\n" +
+            "o.p = [];\n" + 
+            "o.p[0] = 3;\n" + 
+            "print o.p[0];", "3\n");
+    }
+
+
+
+    @Test
+    public void testMultiArrarys() {
+        runAndExpect("multi arrays", 
+            "var a = [];" +
+            "a[0] = [];\n" +
+            "a[0][0] = 3;\n" + 
+            "print a[0][0];", "3\n");
+    }
 
 
 

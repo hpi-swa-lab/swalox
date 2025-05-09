@@ -1,4 +1,6 @@
 
+// based on https://github.com/smarr/are-we-fast-yet/blob/master/benchmarks/JavaScript/sieve.js
+
 load("benchmark.lox");
 
 class Sieve < Benchmark {

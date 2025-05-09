@@ -3,4 +3,5 @@
 
 DIR=$(dirname "$0")
 
-rlwrap $DIR/target/lox "$@"
+# --experimental-options --engine.TraceTransferToInterpreter
+rlwrap $DIR/target/lox  "$@"

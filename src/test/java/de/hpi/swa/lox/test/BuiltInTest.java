@@ -34,4 +34,15 @@ public class BuiltInTest extends AbstractLoxTest {
     }
 
 
+    @Test
+    public void testMathRound() {
+        runAndExpect("round down", 
+            "print round(2.3);",  "2\n");
+        runAndExpect("round up", 
+            "print round(2.6);",  "3\n");
+    }
+
+
+
 }
+

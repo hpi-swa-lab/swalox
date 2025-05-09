@@ -13,6 +13,7 @@ import com.oracle.truffle.api.bytecode.GenerateBytecode;
 import com.oracle.truffle.api.bytecode.LocalAccessor;
 import com.oracle.truffle.api.bytecode.MaterializedLocalAccessor;
 import com.oracle.truffle.api.bytecode.Operation;
+import com.oracle.truffle.api.bytecode.ShortCircuitOperation;
 import com.oracle.truffle.api.bytecode.Variadic;
 import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.Cached;
@@ -42,15 +43,20 @@ import de.hpi.swa.lox.runtime.objects.LoxObject;
 import de.hpi.swa.lox.runtime.objects.Nil;
 import de.hpi.swa.lox.parser.LoxRuntimeError;
 
+import com.oracle.truffle.api.bytecode.ShortCircuitOperation.Operator;
+
 @GenerateBytecode(//
         languageClass = LoxLanguage.class, //
-        boxingEliminationTypes = { long.class, boolean.class }, //
+        boxingEliminationTypes = { long.class }, // , boolean.class // TODO: bug?
         enableUncachedInterpreter = true, //
         enableMaterializedLocalAccesses = true, //
         // storeBytecodeIndexInFrame = true, //
         // defaultLocalValue = Nil.INSTANCE, // does not work?
         enableBlockScoping = true, // should be enabled by default
         enableSerialization = true)
+
+@ShortCircuitOperation(name = "LoxAnd", booleanConverter = LoxBytecodeRootNode.LoxIsTruthy.class, operator = Operator.AND_RETURN_CONVERTED)
+@ShortCircuitOperation(name = "LoxOr", booleanConverter = LoxBytecodeRootNode.LoxIsTruthy.class, operator = Operator.OR_RETURN_CONVERTED)
 public abstract class LoxBytecodeRootNode extends LoxRootNode implements BytecodeRootNode {
 
     protected LoxBytecodeRootNode(LoxLanguage language, FrameDescriptor frameDescriptor) {
@@ -68,25 +74,22 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
         return BytecodeRootNode.super.ensureSourceSection();
     }
 
-    static private boolean isTruthy(Object object) {
-        if (object == Nil.INSTANCE)
-            return false;
-        if (object instanceof Boolean)
-            return (boolean) object;
-        return true;
-    }
-
     @Operation
     public static final class LoxIsTruthy {
 
         @Specialization
-        static boolean bool(boolean value) {
-            return value == true;
+        public static boolean fromLong(long x) {
+            return x != 0;
+        }
+
+        @Specialization
+        public static boolean fromBool(boolean x) {
+            return x;
         }
 
         @Fallback
-        static boolean doDefault(Object value) {
-            return isTruthy(value);
+        public static boolean fromObject(Object x) {
+            return x != Nil.INSTANCE;
         }
     }
 
@@ -117,31 +120,30 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
         }
     }
 
-    @Operation
-    public static final class LoxOr {
-        @Specialization
-        static boolean doBoolean(boolean left, boolean right) {
-            return left || right;
-        }
+    // @Operation
+    // public static final class LoxOr {
+    // @Specialization
+    // static boolean doBoolean(boolean left, boolean right) {
+    // return left || right;
+    // }
 
-        @Fallback
-        static Object fallback(Object left, Object right, @Bind Node node) {
-            throw typeError(node, "|", left, right);
-        }
-    }
+    // @Fallback
+    // static Object fallback(Object left, Object right, @Bind Node node) {
+    // throw typeError(node, "|", left, right);
+    // }
+    // }
 
-    @Operation
-    public static final class LoxAnd {
-        @Specialization
-        static boolean doBoolean(boolean left, boolean right) {
-            return left && right;
-        }
+    // public static final class LoxAnd {
+    // @Specialization
+    // static boolean doBoolean(boolean left, boolean right) {
+    // return left && right;
+    // }
 
-        @Fallback
-        static Object fallback(Object left, Object right, @Bind Node node) {
-            throw typeError(node, "&&", left, right);
-        }
-    }
+    // @Fallback
+    // static Object fallback(Object left, Object right, @Bind Node node) {
+    // throw typeError(node, "&&", left, right);
+    // }
+    // }
 
     @Operation
     public static final class LoxAdd {
@@ -441,7 +443,8 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
 
         @Fallback
         static Object fallback(Object left, Object right, @Bind Node node) {
-            throw typeError(node, "!=", left, right);
+            return left != right; // (not) equality is special... one should be able to ask any question and get
+                                  // false...
         }
     }
 
@@ -469,11 +472,6 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
         @Specialization
         static boolean doBoolean(boolean value) {
             return !value;
-        }
-
-        @Fallback
-        static Object fallback(Object value, @Bind Node node) {
-            return !isTruthy(value);
         }
     }
 
@@ -573,23 +571,29 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
     @Operation
     public static final class LoxWriteArray {
 
-        @Specialization(guards = {"index >= 0", "array.size() > index"})
+        @Specialization(guards = { "index >= 0", "array.size() > index" })
         static Object writeArrayInSize(LoxArray array, long index, Object value) {
             array.setInSize((int) index, value);
             return value;
         }
 
-        @Specialization(guards = {"index >= 0", "array.capacity() > index"}, replaces="writeArrayInSize")
+        @Specialization(guards = { "index >= 0", "array.capacity() > index" }, replaces = "writeArrayInSize")
         static Object writeArrayInCapacity(LoxArray array, long index, Object value) {
             array.setInCapacity((int) index, value);
             return value;
         }
-        
-        @Specialization(guards = "index >= 0", replaces="writeArrayInCapacity")   
+
+        @Specialization(guards = "index >= 0", replaces = "writeArrayInCapacity")
         static Object writeArray(LoxArray array, long index, Object value) {
             array.set((int) index, value);
             return value;
         }
+
+        // @Specialization(guards = "index >= 0")
+        // static Object writeArray(LoxArray array, long index, Object value) {
+        // array.set((int) index, value);
+        // return value;
+        // }
 
         @Fallback
         static Object fallback(Object array, Object index, Object value, @Bind Node node) {
@@ -620,7 +624,7 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
     @ConstantOperand(type = MaterializedLocalAccessor.class)
     public static final class LoxCheckNonLocalDefined {
         @Specialization
-        static void doDefault(MaterializedLocalAccessor accessor, MaterializedFrame materializedFrame, 
+        static void doDefault(MaterializedLocalAccessor accessor, MaterializedFrame materializedFrame,
                 @Bind BytecodeNode bytecodeNode,
                 @Bind LoxContext context,
                 @Bind Node node) {
@@ -661,7 +665,7 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
 
         @Specialization
         static LoxFunction doDefault(VirtualFrame frame, String name, RootCallTarget callTarget, int frameLevel) {
-            MaterializedFrame materializedFrame = frameLevel > 0  ? frame.materialize() : null;
+            MaterializedFrame materializedFrame = frameLevel > 0 ? frame.materialize() : null;
             return new LoxFunction(name, callTarget, materializedFrame);
         }
     }
@@ -677,15 +681,16 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
 
             LoxFunction function = lookupMethod.execute(object, klass, "init");
             if (function != null) {
-                callNode.execute(function,  arguments);
+                callNode.execute(function, arguments);
             }
             return object;
-            
+
         }
 
         @TruffleBoundary
         @Specialization
-        static Object callFunction(LoxFunction obj, @Variadic Object[] arguments, @Cached LoxCallFunctionNode callNode) {
+        static Object callFunction(LoxFunction obj, @Variadic Object[] arguments,
+                @Cached LoxCallFunctionNode callNode) {
             return callNode.execute(obj, arguments);
         }
 
@@ -706,7 +711,6 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
         }
     }
 
-    
     // For DEBUGGING / TESTING BytecodeDSL, see visitHack
 
     @Operation
@@ -727,7 +731,7 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
                 @CachedLibrary(limit = "1") DynamicObjectLibrary dylib) {
             var klass = new LoxClass(name);
             for (var m : methods) {
-                dylib.putConstant(klass, ((LoxFunction ) m).name, m, 0);
+                dylib.putConstant(klass, ((LoxFunction) m).name, m, 0);
             }
             return klass;
         }
@@ -744,7 +748,7 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
     @Operation
     @ConstantOperand(type = String.class)
     public static final class LoxReadProperty {
-        
+
         // TODO: usage of String and equals can "explode" and may need @TruffleBoundary
         // a solution would be to use TruffleStrings as property names
         @Specialization
@@ -756,8 +760,8 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
             }
         }
 
-        @Specialization(limit="1")
-        public static Object read(String name, LoxObject obj, 
+        @Specialization(limit = "1")
+        public static Object read(String name, LoxObject obj,
                 @CachedLibrary("obj") DynamicObjectLibrary dylib,
                 @Cached LookupMethodNode lookupMethod) {
             var result = dylib.getOrDefault(obj, name, Nil.INSTANCE);
@@ -769,11 +773,18 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
             }
             return result;
         }
+
+        @Fallback
+        @TruffleBoundary
+        public static Object read(String name, Object obj, @Bind Node node) {
+            throw new LoxRuntimeError("Cannot read property " + name + " of " + obj, node);
+        }
     }
+
     @Operation
     @ConstantOperand(type = String.class)
     public static final class LoxReadSuper {
-                
+
         @Specialization
         public static Object read(String name, LoxObject obj, LoxClass superClass,
                 @Cached LookupMethodNode lookupMethod) {
@@ -787,7 +798,7 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
 
         @TruffleBoundary
         public static Object methodNotFound(String name) {
-            throw new LoxRuntimeError("Method " + name + " not found in super class", null);    
+            throw new LoxRuntimeError("Method " + name + " not found in super class", null);
         }
     }
 
@@ -813,8 +824,8 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
     @Operation
     @ConstantOperand(type = String.class)
     public static final class LoxWriteProperty {
-        @Specialization(limit="1")
-        public static Object write(String name, LoxObject obj,  Object value,
+        @Specialization(limit = "1")
+        public static Object write(String name, LoxObject obj, Object value,
                 @CachedLibrary("obj") DynamicObjectLibrary dylib) {
             dylib.put(obj, name, value);
             return value;

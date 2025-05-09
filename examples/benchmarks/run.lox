@@ -1,3 +1,4 @@
+// based on https://github.com/smarr/are-we-fast-yet/blob/master/benchmarks/JavaScript/run.js
 
 class Run {
     init(name) {
@@ -16,7 +17,7 @@ class Run {
 
     reportBenchmark() {
         print this.name + ": iterations=" + String(this.numIterations) + " average: " 
-            + String(this.total / this.numIterations) + "us total: " + String(this.total) + "us";
+            + String(round(this.total / this.numIterations)) + "us total: " + String(this.total) + "us";
     }
 
     printResult(runTime) {
@@ -29,7 +30,7 @@ class Run {
             print "ERROR Benchmark failed with incorrect result";
             return nil;
         }
-        var runTime = (clock() - startTime) * 1000; // convert to microseconds
+        var runTime = round((clock() - startTime) * 1000 * 1000); // convert to seconds to microseconds
 
         this.printResult(runTime);
         this.total = this.total + runTime;

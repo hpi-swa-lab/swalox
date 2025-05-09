@@ -1,0 +1,73 @@
+// based on https://github.com/smarr/are-we-fast-yet/blob/master/benchmarks/JavaScript/list.js
+
+load("benchmark.lox");
+
+class Element {
+    init(v) {
+        this.val = v;
+        this.next = nil;
+    }
+
+    length() {
+        if (this.next == nil) {
+        return 1;
+        }
+        return 1 + this.next.length();
+    }
+}
+
+class List < Benchmark {
+    benchmark() {
+        var result = this.takl(
+            this.makeList(15),
+            this.makeList(10),
+            this.makeList(6)
+        );
+        return result.length();
+    }
+
+    makeList(length) {
+        if (length == 0) {
+        return nil;
+        }
+        var e = Element(length);
+        e.next = this.makeList(length - 1);
+        return e;
+    }
+
+    isShorterThan(x, y) {
+        var xTail = x;
+        var yTail = y;
+
+        while (yTail != nil) {
+            if (xTail == nil) { 
+                return true; 
+            }
+            xTail = xTail.next;
+            yTail = yTail.next;
+        }
+        return false;
+    }
+
+
+    // TAKL -- The TAKeuchi function using lists as counters
+    takl(x, y, z) {
+        // print "takl " + x.length() + " " + y.length() + " " + z.length();
+        if (this.isShorterThan(y, x)) {
+            return this.takl(
+                this.takl(x.next, y, z),
+                this.takl(y.next, z, x),
+                this.takl(z.next, x, y)
+            );
+        }
+        return z;
+    }
+
+    verifyResult(result) {
+        return 10 == result;
+    }
+}
+
+return List();
+  
+
