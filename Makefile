@@ -1,8 +1,4 @@
 
-
-
-test:
-	./mvnw -e clean test
 # Just for convenience....
 
 run: classpath
@@ -16,6 +12,5 @@ classpath: force
 
 native:
 	./mvnw -P native package
-
 
 force:

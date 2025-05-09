@@ -24,6 +24,16 @@ public class MainTest extends AbstractLoxTest {
 
 
     @Test
+    public void testEvaluateExpression() {
+        // capture system out
+        var main = new LoxMain();
+
+        main.evaluateExpression(context, "3 + 4;");
+
+        assertEquals("Should print 7", "7\n", normalize(outContent.toString()));
+    }
+
+    @Test
     public void testCommandPrintsErrors() {
         // capture system out
         LoxMain.main(new String[]{"-c", "print 1 + true;"});

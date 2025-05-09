@@ -18,7 +18,10 @@ declaration    :  varDecl
                | statement ;
 
 statement      : exprStmt 
-               | printStmt   
+               | forStmt
+               | ifStmt
+               | printStmt
+               | whileStmt
                | haltStmt
                | hackStmt
                | block;
@@ -26,18 +29,26 @@ statement      : exprStmt
 varDecl        : 'var' IDENTIFIER ('=' expression )? ';' ;
 
 exprStmt       : expression ';' ;
+forStmt        : 'for' '(' (varDecl | exprStmt | ';' )
+                           condition=expression? ';'
+                           increment=expression? ')' body=statement ;
+ifStmt         : 'if' '(' condition=expression ')' then=statement
+                 ( 'else' alt=statement )? ;
 printStmt      : 'print' expression ';' ;
+whileStmt      : 'while' '(' condition=expression ')' body=statement;
 
 haltStmt       : 'halt;' ;
 hackStmt       : 'hack;' ; // for debugging
 
 block          : '{' declaration* '}' ;
 
-
 expression     : assignment ;
 
 assignment     : IDENTIFIER '=' assignment
-               | logic_or ;
+               | arrayAssignment ;
+
+arrayAssignment    : left=variableExpr '[' index=expression ']' '=' right=assignment
+               | other=logic_or;
 
 logic_or       : logic_and ( 'or' logic_and )* ;
 logic_and      : equality ( 'and' equality )* ;
@@ -49,9 +60,13 @@ factor         : unary ( ( '/' | '*' ) unary )* ;
 unary          : ( '!' | '-' ) unary | primary  ;
 
 
-primary         : number | string | true | false | nil | variableExpr | '(' expression ')';    
+primary         : number | string | true | false | nil | array |  arrayExpr | variableExpr | '(' expression ')';    
 
 variableExpr    : IDENTIFIER;
+arrayExpr       : left=variableExpr '[' index=expression ']';
+
+
+array : '[]';
 
 
 string          : STRING ;
@@ -59,6 +74,7 @@ nil             : 'nil';
 true            : 'true';
 false           : 'false';
 number          : NUMBER;
+
 
 NUMBER          : DIGIT+ ( '.' DIGIT+ )? ;
 STRING          : '"' (~["\\])* '"' ;

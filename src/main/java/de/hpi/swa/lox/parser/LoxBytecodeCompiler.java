@@ -23,13 +23,20 @@ import com.oracle.truffle.api.strings.TruffleString;
 
 import de.hpi.swa.lox.LoxLanguage;
 import de.hpi.swa.lox.bytecode.LoxBytecodeRootNodeGen;
+import de.hpi.swa.lox.parser.LoxParser.ArrayAssignmentContext;
+import de.hpi.swa.lox.parser.LoxParser.ArrayContext;
+import de.hpi.swa.lox.parser.LoxParser.ArrayExprContext;
 import de.hpi.swa.lox.parser.LoxParser.AssignmentContext;
 import de.hpi.swa.lox.parser.LoxParser.BlockContext;
 import de.hpi.swa.lox.parser.LoxParser.ComparisonContext;
+import de.hpi.swa.lox.parser.LoxParser.DeclarationContext;
 import de.hpi.swa.lox.parser.LoxParser.EqualityContext;
+import de.hpi.swa.lox.parser.LoxParser.ExprStmtContext;
 import de.hpi.swa.lox.parser.LoxParser.FactorContext;
 import de.hpi.swa.lox.parser.LoxParser.FalseContext;
+import de.hpi.swa.lox.parser.LoxParser.ForStmtContext;
 import de.hpi.swa.lox.parser.LoxParser.HackStmtContext;
+import de.hpi.swa.lox.parser.LoxParser.IfStmtContext;
 import de.hpi.swa.lox.parser.LoxParser.Logic_orContext;
 import de.hpi.swa.lox.parser.LoxParser.NilContext;
 import de.hpi.swa.lox.parser.LoxParser.NumberContext;
@@ -42,6 +49,7 @@ import de.hpi.swa.lox.parser.LoxParser.TrueContext;
 import de.hpi.swa.lox.parser.LoxParser.UnaryContext;
 import de.hpi.swa.lox.parser.LoxParser.VarDeclContext;
 import de.hpi.swa.lox.parser.LoxParser.VariableExprContext;
+import de.hpi.swa.lox.parser.LoxParser.WhileStmtContext;
 import de.hpi.swa.lox.runtime.objects.Nil;
 
 /**
@@ -178,7 +186,7 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
         curScope = new LexicalScope();
         super.visitProgram(ctx);
         b.beginReturn();
-        b.emitLoadConstant(0);
+        b.emitLoadConstant(Nil.INSTANCE);
         b.endReturn();
         curScope = null;
         b.endRoot();
@@ -203,6 +211,88 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
         super.visitPrintStmt(ctx);
         b.endLoxPrint();
         endAttribution();
+        return null;
+    }
+
+    @Override
+    public Void visitExprStmt(ExprStmtContext ctx) {
+        if (ctx.parent instanceof StatementContext statement) {
+            if (statement.parent instanceof DeclarationContext declaration) {
+                if (declaration.parent instanceof ProgramContext program) {
+                    if (declaration == program.getChild(program.getChildCount() - 2)) {
+                        // implicit return last statement
+                        b.beginReturn();
+                        super.visitExprStmt(ctx);
+                        b.endReturn();
+                        return null;
+                    }
+                }
+            }
+        }
+        super.visitExprStmt(ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitIfStmt(IfStmtContext ctx) {
+        if (ctx.alt == null) {
+            b.beginIfThen();
+            beginAttribution(ctx.condition);
+            b.beginLoxIsTruthy();
+            visit(ctx.condition);
+            b.endLoxIsTruthy();
+            endAttribution();
+            visit(ctx.then);
+            b.endIfThen();
+        } else {
+            b.beginIfThenElse();
+            beginAttribution(ctx.condition);
+            b.beginLoxIsTruthy();
+            visit(ctx.condition);
+            b.endLoxIsTruthy();
+            endAttribution();
+            visit(ctx.then);
+            visit(ctx.alt);
+            b.endIfThenElse();
+        }
+        return null;
+    }
+
+    @Override
+    public Void visitWhileStmt(WhileStmtContext ctx) {
+        b.beginWhile();
+        beginAttribution(ctx.condition);
+        b.beginLoxIsTruthy();
+        visit(ctx.condition);
+        b.endLoxIsTruthy();
+        endAttribution();
+        visit(ctx.body);
+        b.endWhile();
+        return null;
+    }
+
+    @Override
+    public Void visitForStmt(ForStmtContext ctx) {
+        ParserRuleContext init = ctx.varDecl();
+        if (init == null) {
+            init = ctx.exprStmt();
+        }
+        if (init != null) {
+            visit(init);
+        }
+        b.beginWhile();
+        beginAttribution(ctx.condition);
+        b.beginLoxIsTruthy();
+        visit(ctx.condition);
+        b.endLoxIsTruthy();
+        endAttribution();
+        b.beginBlock();
+        if (ctx.body != null)
+            visit(ctx.body);
+        if (ctx.increment != null)
+            visit(ctx.increment);
+        b.endBlock();
+        b.endWhile();
         return null;
     }
 
@@ -545,6 +635,34 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
     public Void visitNil(NilContext ctx) {
         b.emitLoadConstant(Nil.INSTANCE);
         return super.visitNil(ctx);
+    }
+
+    @Override
+    public Void visitArray(ArrayContext ctx) {
+        b.emitLoxNewArray();
+        return super.visitArray(ctx);
+    }
+
+    @Override
+    public Void visitArrayExpr(ArrayExprContext ctx) {
+        b.beginLoxReadArray();
+        visit(ctx.left);
+        visit(ctx.index);
+        b.endLoxReadArray();
+        return null;
+    }
+
+    @Override
+    public Void visitArrayAssignment(ArrayAssignmentContext ctx) {
+        if (ctx.other != null) {
+            return visit(ctx.other);
+        }
+        b.beginLoxWriteArray();
+        visit(ctx.left);
+        visit(ctx.index);
+        visit(ctx.right);
+        b.endLoxWriteArray();
+        return null;
     }
 
     // Attributions

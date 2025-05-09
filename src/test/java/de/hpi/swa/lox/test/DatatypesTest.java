@@ -27,4 +27,10 @@ public class DatatypesTest extends AbstractLoxTest {
     public void testNil() {
         runAndExpect("testNil", "print nil;", "nil\n");
     }
+
+    @Test
+    public void testNilEqualsNil() {
+        runAndExpect("testNilEqualsNil", "print nil == nil;", "true\n");
+    }
+
 }

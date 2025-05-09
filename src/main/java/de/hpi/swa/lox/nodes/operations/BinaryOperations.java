@@ -58,12 +58,12 @@ public final class BinaryOperations {
         }
     
         @Specialization
+        @TruffleBoundary
         Object doLB(double left, BigInteger right) {
             return doOp(left, right.doubleValue());
         }
     
         @Specialization
-        @TruffleBoundary
         Object doLD(double left, long right) {
             return doOp(left, (double) right);
         }

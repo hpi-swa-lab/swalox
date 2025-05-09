@@ -1,8 +1,5 @@
 package de.hpi.swa.lox.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
-
 import org.junit.Test;
 
 public class ExpressionsTest extends AbstractLoxTest {
@@ -11,11 +8,6 @@ public class ExpressionsTest extends AbstractLoxTest {
     public void testLogicalNot() {
         runAndExpect("testLogical", "print !true;", "false\n");
         runAndExpect("testLogical", "print !false;", "true\n");
-    }
-
-    @Test
-    public void testLogicalNotError() {
-        runAndExpectError("testLogical", "print !1;", "Type Error");
     }
 
     @Test
@@ -138,7 +130,7 @@ public class ExpressionsTest extends AbstractLoxTest {
         runAndExpectError("testComparison", "print 1 <= true;", "Type Error");
         runAndExpectError("testComparison", "print 1 > true;", "Type Error");
         runAndExpectError("testComparison", "print 1 >= true;", "Type Error");
-        runAndExpectError("testComparison", "print 1 == true;", "Type Error");
+        runAndExpect("testComparison", "print 1 == true;", "false\n");  
         runAndExpectError("testComparison", "print 1 != true;", "Type Error");
     }
 
@@ -173,5 +165,32 @@ public class ExpressionsTest extends AbstractLoxTest {
         runAndExpect("testExpressionGrouping", "var a; print a = 3;", "3\n");
 
     }
+
+
+    @Test
+    public void testTruthiness() {
+        runAndExpect("testNilIsFalse", "print !nil;", "true\n");
+    }
+
+    @Test
+    public void testTruthinessCondition() {
+        runAndExpect("testNumbersAreTrue", "if(1) print 3;", "3\n");
+        runAndExpect("testStringsAreTrue", "if(\"hello\") print 3;", "3\n");
+        runAndExpect("testNilIsFalseInCondtion", "if(nil) print 3;", "");
+        runAndExpect("testNilIsFalseInCondtion", "if(nil) print 3; else print 4;", "4\n");
+    }
+
+    @Test
+    public void testTruthinessWhile() {
+        runAndExpect("testNumbersAreTrue", "var a = true; while(a) { print a; a = nil;}", "true\n");
+        
+    }
+
+    @Test
+    public void testTruthinessFor() {
+        runAndExpect("testNumbersAreTrue", "for(var a=true; a ; a = nil) { print a;}", "true\n");
+        
+    }
+
 
 }

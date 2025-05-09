@@ -133,11 +133,18 @@ public class LoxMain extends AbstractLanguageLauncher {
             if (line == null) {
                 break;
             }
-            try {
-                context.eval("lox", line);
-            } catch (Exception e) {
-                printException(e);
+            evaluateExpression(context, line);
+        }
+    }
+
+    public void evaluateExpression(Context context, String line) {
+        try {
+            var result = context.eval("lox", line);
+            if (!result.isNull()) {
+                System.out.println(result);
             }
+        } catch (Exception e) {
+            printException(e);
         }
     }
 

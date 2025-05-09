@@ -25,11 +25,10 @@ import de.hpi.swa.lox.nodes.LoxRootNode;
 import de.hpi.swa.lox.nodes.operations.BinaryOperations.AddNode;
 import de.hpi.swa.lox.nodes.operations.BinaryOperations.MultiplyNode;
 import de.hpi.swa.lox.nodes.operations.BinaryOperations.SubtractNode;
-import de.hpi.swa.lox.nodes.operations.BinaryOperationsFactory.AddNodeGen;
-import de.hpi.swa.lox.nodes.operations.BinaryOperationsFactory.SubtractNodeGen;
 import de.hpi.swa.lox.runtime.LoxContext;
 import de.hpi.swa.lox.runtime.objects.GlobalObject;
-
+import de.hpi.swa.lox.runtime.objects.LoxArray;
+import de.hpi.swa.lox.runtime.objects.Nil;
 import de.hpi.swa.lox.parser.LoxRuntimeError;
 
 
@@ -56,6 +55,27 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
     public final SourceSection ensureSourceSection() {
         return BytecodeRootNode.super.ensureSourceSection();
     }
+
+    static private boolean isTruthy(Object object) {
+        if (object == Nil.INSTANCE) return false;
+        if (object instanceof Boolean) return (boolean)object;
+        return true;
+    }
+
+    @Operation
+    public static final class LoxIsTruthy {
+        
+        @Specialization
+        static boolean bool(boolean value) {
+            return value == true;
+        }
+
+        @Fallback
+        static boolean doDefault(Object value) {
+            return isTruthy(value);
+        }
+    }
+
 
     // Print Statement
     @Operation
@@ -376,7 +396,9 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
 
         @Fallback
         static Object fallback(Object left, Object right, @Bind Node node) {
-            throw typeError(node, "==", left, right);
+            return left == right; // equality is special... one should be able to ask any question and get false...
+            
+            // throw typeError(node, "==", left, right);
         }
     }
 
@@ -436,7 +458,7 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
 
         @Fallback
         static Object fallback(Object value, @Bind Node node) {
-            throw typeError(node, "!", value);
+            return !isTruthy(value);
         }
     }
 
@@ -506,6 +528,46 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
         @TruffleBoundary
         private static String formatMessage(String name) {
             return "Variable " + name + " was not defined";
+        }
+    }
+
+    @Operation
+    public static final class LoxNewArray {
+        
+        @Specialization
+        static Object fallback() {
+            return new LoxArray();
+        }
+    }
+
+    @Operation
+    public static final class LoxReadArray {
+        
+        
+        @Specialization(guards = "index >= 0")
+
+        static Object readArray(LoxArray array, long index) {
+            return array.get((int) index);
+        }
+
+        @Fallback
+        static Object fallback(Object array, Object index, @Bind Node node) {
+            throw typeError(node, "array[index]", array, index);
+        }
+    }
+
+    @Operation
+    public static final class LoxWriteArray {
+
+        @Specialization(guards = "index >= 0")
+        static Void writeArray(LoxArray array, long index, Object value) {
+            array.set((int) index, value);
+            return null;
+        }
+
+        @Fallback
+        static Object fallback(Object array, Object index, Object value, @Bind Node node) {
+            throw typeError(node, "array[index]=value", array, index, value);
         }
     }
 

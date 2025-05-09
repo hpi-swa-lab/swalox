@@ -1,0 +1,16 @@
+var flags = [];
+var size = 600;
+var primeCount = 0;
+  
+for (var i = 2; i <= size; i = i + 1) {
+    if (flags[i - 1] == nil) {
+        print i;
+        primeCount = primeCount + 1;
+        var k = i + i;
+        while (k <= size) {
+            flags[k - 1] = false;
+            k = k + i;
+        }
+    }
+}
+
