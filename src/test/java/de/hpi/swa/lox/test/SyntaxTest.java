@@ -2,9 +2,6 @@ package de.hpi.swa.lox.test;
 
 import org.junit.Test;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-
 public class SyntaxTest extends AbstractLoxTest {
     
     @Test

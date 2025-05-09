@@ -3,9 +3,10 @@ package de.hpi.swa.lox.runtime.objects;
 import java.util.Arrays;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.interop.TruffleObject;
 import com.oracle.truffle.api.strings.TruffleString;
 
-public class LoxArray {
+public class LoxArray implements TruffleObject {
 
     private Object[] elements;
 

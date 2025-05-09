@@ -1,0 +1,10 @@
+class O { 
+    m() {
+        return this.a;
+    }
+    m2() {
+        return this.m();
+    }
+} var o = O(); 
+o.a = 3; 
+print o.m2(); // prints "3"

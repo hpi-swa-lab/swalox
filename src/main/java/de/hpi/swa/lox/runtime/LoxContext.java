@@ -9,7 +9,11 @@ import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.nodes.Node;
 
 import de.hpi.swa.lox.LoxLanguage;
+import de.hpi.swa.lox.nodes.ClockBuiltInNode;
 import de.hpi.swa.lox.runtime.objects.GlobalObject;
+import de.hpi.swa.lox.runtime.objects.LoxFunction;
+
+
 
 @Bind.DefaultExpression("get($node)")
 public final class LoxContext {
@@ -20,6 +24,12 @@ public final class LoxContext {
     public LoxContext(LoxLanguage language, TruffleLanguage.Env env) {
         this.env = env;
         this.globalObject = new GlobalObject();
+
+        var clockNode = new ClockBuiltInNode();
+        var clockCallTarget = clockNode.getCallTarget();
+        var clockFunction = new LoxFunction("clock", clockCallTarget, null);
+        this.globalObject.set("clock", clockFunction);
+
     }
 
     private static final ContextReference<LoxContext> REFERENCE = ContextReference.create(LoxLanguage.class);

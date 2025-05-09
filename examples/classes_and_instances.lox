@@ -1,0 +1,14 @@
+class O {} 
+var o1 = O(); 
+o1.a = 3; 
+
+var o2 = O(); 
+o2.a = 4; 
+
+class P {} 
+var o3 = P(); 
+o3.b = "xyz"; 
+o3.c = o2;
+
+print o3.c.a; // prints "4"
+

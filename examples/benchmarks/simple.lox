@@ -1,0 +1,41 @@
+var N = 100000000;
+
+
+fun benchmark(name, f, doPrint) {
+    var a = clock(); 
+    f();
+    if (doPrint)  print name + " " + (clock() - a) + "s";
+}
+
+fun bench_array_of_squares() {
+    var r = [];
+    for(var i=0; i < N; i = i + 1){
+        r[i] = i * i; 
+    } 
+    print r[N -1];
+}
+
+fun bench_sum_of_squares() {
+    var r = 0;
+    for(var i=0; i < N; i = i + 1){
+        r = r +  i * i; 
+    } 
+    print r;
+}
+
+
+fun bench_fun_sum_of_squares() {
+    var r = 0;
+    fun sum_of_squares(i) {
+        r = r +  i * i; 
+    }
+    for(var i=0; i < N; i = i + 1){
+        sum_of_squares(i);
+    } 
+}
+
+benchmark("bench_array_of_squares", bench_array_of_squares, true);
+benchmark("bench_sum_of_squares", bench_sum_of_squares, true);
+benchmark("bench_fun_sum_of_squares", bench_fun_sum_of_squares, true);
+
+

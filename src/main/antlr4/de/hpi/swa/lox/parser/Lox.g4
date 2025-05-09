@@ -14,11 +14,15 @@ grammar Lox;
 
 program        : declaration* EOF ;
 
-declaration    :  funDecl
-               | varDecl 
+declaration    :  classDecl 
+               | funDecl
+               | varDecl
                | statement ;
 
-statement      : exprStmt 
+classDecl      : 'class' IDENTIFIER 
+                 '{' function* '}' ;
+
+statement      : exprStmt
                | forStmt
                | ifStmt
                | printStmt
@@ -48,7 +52,7 @@ block          : '{' declaration* '}' ;
 
 expression     : assignment ;
 
-assignment     : IDENTIFIER '=' assignment
+assignment     : ( call '.' )? IDENTIFIER '=' assignment
                | arrayAssignment ;
 
 arrayAssignment    : left=variableExpr '[' index=expression ']' '=' right=assignment
@@ -63,10 +67,10 @@ factor         : unary ( ( '/' | '*' ) unary )* ;
 
 unary          : ( '!' | '-' ) unary | call;
 call           : primary callArguments* ;
- 
-callArguments : '(' arguments? ')';
 
-primary         : number | string | true | false | nil | array |  arrayExpr | variableExpr | '(' expression ')';    
+callArguments : '(' arguments? ')' | '.' IDENTIFIER;
+
+primary         : number | string | true | false | nil | array |  arrayExpr | variableExpr | '(' expression ')';
 
 variableExpr    : IDENTIFIER;
 arrayExpr       : left=variableExpr '[' index=expression ']';
@@ -78,7 +82,7 @@ parameters     : IDENTIFIER ( ',' IDENTIFIER )* ;
 arguments      : expression ( ',' expression )* ;
 
 string          : STRING ;
-nil             : 'nil';     
+nil             : 'nil';
 true            : 'true';
 false           : 'false';
 number          : NUMBER;

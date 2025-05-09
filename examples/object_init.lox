@@ -1,0 +1,7 @@
+class O {
+    init(a) {
+        this.a = a;
+    }
+} 
+var o = O(3); 
+print o.a; // prints "3"

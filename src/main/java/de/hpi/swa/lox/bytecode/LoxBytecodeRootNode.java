@@ -11,6 +11,7 @@ import com.oracle.truffle.api.bytecode.BytecodeRootNode;
 import com.oracle.truffle.api.bytecode.ConstantOperand;
 import com.oracle.truffle.api.bytecode.GenerateBytecode;
 import com.oracle.truffle.api.bytecode.LocalAccessor;
+import com.oracle.truffle.api.bytecode.MaterializedLocalAccessor;
 import com.oracle.truffle.api.bytecode.Operation;
 import com.oracle.truffle.api.bytecode.Variadic;
 import com.oracle.truffle.api.dsl.Bind;
@@ -20,9 +21,9 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.DirectCallNode;
-import com.oracle.truffle.api.nodes.IndirectCallNode;
+import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.source.SourceSection;
 
 import de.hpi.swa.lox.LoxLanguage;
@@ -30,10 +31,13 @@ import de.hpi.swa.lox.nodes.LoxRootNode;
 import de.hpi.swa.lox.nodes.operations.BinaryOperations.AddNode;
 import de.hpi.swa.lox.nodes.operations.BinaryOperations.MultiplyNode;
 import de.hpi.swa.lox.nodes.operations.BinaryOperations.SubtractNode;
+import de.hpi.swa.lox.nodes.operations.LoxCallFunctionNode;
 import de.hpi.swa.lox.runtime.LoxContext;
 import de.hpi.swa.lox.runtime.objects.GlobalObject;
 import de.hpi.swa.lox.runtime.objects.LoxArray;
+import de.hpi.swa.lox.runtime.objects.LoxClass;
 import de.hpi.swa.lox.runtime.objects.LoxFunction;
+import de.hpi.swa.lox.runtime.objects.LoxObject;
 import de.hpi.swa.lox.runtime.objects.Nil;
 import de.hpi.swa.lox.parser.LoxRuntimeError;
 
@@ -140,6 +144,7 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
 
     @Operation
     public static final class LoxAdd {
+
         @Specialization
         static Object doOp(Object left, Object right,
                 @Bind Node node,
@@ -599,10 +604,10 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
     }
 
     @Operation
-    @ConstantOperand(type = LocalAccessor.class)
+    @ConstantOperand(type = MaterializedLocalAccessor.class)
     public static final class LoxCheckNonLocalDefined {
         @Specialization
-        static void doDefault(LocalAccessor accessor, MaterializedFrame materializedFrame,
+        static void doDefault(MaterializedLocalAccessor accessor, MaterializedFrame materializedFrame, 
                 @Bind BytecodeNode bytecodeNode,
                 @Bind LoxContext context,
                 @Bind Node node) {
@@ -612,24 +617,26 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
         }
 
         @TruffleBoundary
-        private static String formatError(LocalAccessor accessor) {
-            return "Variable " + accessor.toString() + " was not defined";
+        private static String formatError(MaterializedLocalAccessor accessor) {
+            // TODO: rember name of variable... pass name as constant arg
+            return "Variable " + accessor.toString() + "was not defined";
         }
     }
 
     @Operation
     @ConstantOperand(type = int.class)
     public static final class LoxLoadArgument {
-        @Specialization(guards = "index <= arguments.length")
-        static Object doDefault(VirtualFrame frame, int index,
-                @Bind("frame.getArguments()") Object[] arguments) {
-            return arguments[index + 1];
+        @Specialization
+        static Object doDefault(VirtualFrame frame, int index) {
+            return LoxFunction.getArgument(frame, index);
         }
+    }
 
-        @Fallback
-        static Object doLoadOutOfBounds(int index) {
-            /* Use the default null value. */
-            return Nil.INSTANCE;
+    @Operation
+    public static final class LoxLoadThis {
+        @Specialization
+        static Object doDefault(VirtualFrame frame) {
+            return LoxFunction.getThis(frame);
         }
     }
 
@@ -649,18 +656,24 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
     @Operation
     public static final class LoxCall {
 
-        @Specialization(limit = "3", //
-                guards = "function.getCallTarget() == cachedTarget")
-        protected static Object doDirect(LoxFunction function, @Variadic Object[] arguments,
-                @Cached("function.getCallTarget()") RootCallTarget cachedTarget,
-                @Cached("create(cachedTarget)") DirectCallNode directCallNode) {
-            return directCallNode.call(function, function.createArguments(arguments));
+        @Specialization(limit = "1")
+        static Object classInstationation(LoxClass klass, @Variadic Object[] arguments,
+            @Cached LoxCallFunctionNode callNode,
+            @CachedLibrary("klass") DynamicObjectLibrary klassDylib) {
+            var object = new LoxObject(klass);
+
+            LoxFunction function = lookupMethod(object, "init", klassDylib);
+            if (function != null) {
+                callNode.execute(function,  arguments);
+            }
+            return object;
+            
         }
 
-        @Specialization(replaces = "doDirect")
-        static Object doIndirect(LoxFunction function, @Variadic Object[] arguments,
-                @Cached IndirectCallNode callNode) {
-            return callNode.call(function.getCallTarget(), function.createArguments(arguments));
+        @TruffleBoundary
+        @Specialization
+        static Object callFunction(LoxFunction obj, @Variadic Object[] arguments, @Cached LoxCallFunctionNode callNode) {
+            return callNode.execute(obj, arguments);
         }
 
         @TruffleBoundary
@@ -680,6 +693,7 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
         }
     }
 
+    
     // For DEBUGGING / TESTING BytecodeDSL, see visitHack
 
     @Operation
@@ -690,10 +704,65 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
         }
     }
 
+    @Operation
+    @ConstantOperand(type = String.class)
+    public static final class LoxDeclareClass {
+
+        @Specialization
+        @TruffleBoundary
+        public static LoxClass declare(String name, @Variadic Object[] methods,
+                @CachedLibrary(limit = "1") DynamicObjectLibrary dylib) {
+            var klass = new LoxClass(name);
+            for (var m : methods) {
+                dylib.putConstant(klass, ((LoxFunction) m).name, m, 0); 
+            }
+            return klass;
+        }
+    }
+
+    @Operation
+    @ConstantOperand(type = String.class)
+    public static final class LoxReadProperty {
+        @Specialization(limit="1")
+        public static Object read(String name, LoxObject obj, 
+                @CachedLibrary("obj") DynamicObjectLibrary dylib,
+                @CachedLibrary("obj.klass") DynamicObjectLibrary klassDylib) {
+            var result = dylib.getOrDefault(obj, name, Nil.INSTANCE);
+            if (result == Nil.INSTANCE) {
+                var m = lookupMethod(obj, name, klassDylib);
+                if (m != null) {
+                    return m;
+                }
+            }
+            return result;
+        }
+    }
+
+    private static LoxFunction lookupMethod(LoxObject obj, String name, DynamicObjectLibrary klassDylib) {
+        // TODO: actual inheritance
+        var m = klassDylib.getOrDefault(obj.klass, name, null);
+        if (m != null) {
+            return new LoxFunction(obj, (LoxFunction) m); // bind method to object
+        }
+        return null;
+    }
+
+
+    @Operation
+    @ConstantOperand(type = String.class)
+    public static final class LoxWriteProperty {
+        @Specialization(limit="1")
+        public static Object write(String name, LoxObject obj,  Object value,
+                @CachedLibrary("obj") DynamicObjectLibrary dylib) {
+            dylib.put(obj, name, value);
+            return value;
+        }
+    }
+
     // Helper
 
     @TruffleBoundary
-    private static LoxRuntimeError typeError(Node node, String operation, Object... values) {
+    public static LoxRuntimeError typeError(Node node, String operation, Object... values) {
         StringBuilder result = new StringBuilder();
         result.append("Type Error for Operation " + operation + " with values:");
         for (Object value : values) {

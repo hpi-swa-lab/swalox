@@ -88,9 +88,7 @@ public class FunctionsTest extends AbstractLoxTest {
             "2\n");
     }
 
-
-    // TODO: this test fails, because not clear how to check for defined variables in the materialized frame
-    // @Test
+    @Test
     public void testInnerFunctionReadUndefinedOuterVariable() { 
         runAndExpectError("inner function uses outer variable",  
             "fun outer() { "+
@@ -101,7 +99,7 @@ public class FunctionsTest extends AbstractLoxTest {
             "    return inner();"+
             "}"+ 
             "print outer();", 
-            "a not defined\n");
+            "was not defined\n");
     }
 
 

@@ -1,0 +1,7 @@
+class O { 
+    m() {return 3;}
+    m2(a) {return a + 1;}
+} 
+
+var o = O(); 
+print o.m2(1); // prints "2"

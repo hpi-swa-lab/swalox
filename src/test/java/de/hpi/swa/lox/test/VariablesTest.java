@@ -81,4 +81,10 @@ public class VariablesTest extends AbstractLoxTest{
     // }
 
 
+    @Test
+    public void testUndeclaredGlobalVariable() {
+        runAndExpect("testOverridingVariables", "var a;", ""); 
+        runAndExpect("testOverridingVariables", "a = 3; print a;", "3\n"); 
+    }
+   
 }

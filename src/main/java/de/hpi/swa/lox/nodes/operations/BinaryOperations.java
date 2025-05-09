@@ -8,6 +8,7 @@ import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.GenerateUncached;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.strings.TruffleString;
 
 public final class BinaryOperations {
 
@@ -105,6 +106,13 @@ public final class BinaryOperations {
         protected double doOp(double left, double right) {
             return left + right;
         }
+        
+        @Specialization
+        @TruffleBoundary
+        static TruffleString addStrings(TruffleString left, Object right) {
+            return TruffleString.fromJavaStringUncached(left + right.toString(), TruffleString.Encoding.UTF_8);
+        }
+
     }
 
     @GenerateUncached

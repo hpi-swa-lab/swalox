@@ -4,18 +4,29 @@ import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.interop.TruffleObject;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
-public class LoxFunction {
+public class LoxFunction implements TruffleObject {
 
-    private final String name;
+    public final String name;
     private final RootCallTarget callTarget;
     private final MaterializedFrame outerFrame;
+    private final LoxObject self;
 
-    public LoxFunction(String name, RootCallTarget callTarget, MaterializedFrame outerFrame) {
+    private LoxFunction(String name, RootCallTarget callTarget, MaterializedFrame outerFrame, LoxObject self) {
         this.name = name;
         this.callTarget = callTarget;
         this.outerFrame = outerFrame;
+        this.self = self;
+    }
+
+    public LoxFunction(String name, RootCallTarget callTarget, MaterializedFrame outerFrame) {
+        this(name, callTarget, outerFrame, null);
+    }
+
+    public LoxFunction(LoxObject obj, LoxFunction m) {
+        this(m.name, m.callTarget, m.outerFrame, obj);
     }
 
     public RootCallTarget getCallTarget() {
@@ -29,16 +40,20 @@ public class LoxFunction {
         return result;
     }
 
-    static Object getArgument(VirtualFrame frame, int index) {
+    public static Object getArgument(VirtualFrame frame, int index) {
         // adjust position because we have hidden arguments at the front
         return frame.getArguments()[index + 1]; 
     }
 
-    static LoxFunction getCurrentFunction(Frame frame) {
+    private static LoxFunction getCurrentFunction(Frame frame) {
         return (LoxFunction) frame.getArguments()[0];
     }
 
-    static public MaterializedFrame getFrameAtLevelN(VirtualFrame frame, int index) {
+    public static LoxObject getThis(VirtualFrame frame) {
+        return getCurrentFunction(frame).self;
+    }
+
+    public static MaterializedFrame getFrameAtLevelN(VirtualFrame frame, int index) {
         assert index > 0;
         LoxFunction func = getCurrentFunction(frame);
         for (int i = index - 1; i > 0; i--) {
@@ -49,6 +64,6 @@ public class LoxFunction {
 
     @TruffleBoundary
     public String toString() {
-        return "Function " + this.name;
+        return self == null ? "Function " + name : self.klass.name + "#" + name;
     }
 }
