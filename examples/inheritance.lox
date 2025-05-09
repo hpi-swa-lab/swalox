@@ -1,0 +1,12 @@
+class A {
+   m() {
+      return 3;
+   }
+}
+class B < A {
+   m2() {
+      return this.m() + 4;
+   }
+}
+var b = B();
+print b.m2(); // prints 7

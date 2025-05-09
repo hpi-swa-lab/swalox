@@ -1,8 +1,9 @@
 package de.hpi.swa.lox.runtime.objects;
 
+import com.oracle.truffle.api.interop.TruffleObject;
 import com.oracle.truffle.api.object.DynamicObject;
 
-public final class LoxObject extends DynamicObject {
+public final class LoxObject extends DynamicObject implements TruffleObject {
 
     public final LoxClass klass;
         
@@ -11,7 +12,6 @@ public final class LoxObject extends DynamicObject {
         this.klass = klass;
     }
    
-
     @Override
     public String toString() {
         return klass.name;

@@ -9,6 +9,12 @@ public class ClassTest extends AbstractLoxTest {
         runAndExpect("declare class", "class O {} print O;", "Class O\n");
      }
 
+     @Test
+     public void testDelcareClassMultiLine() {
+        runAndExpect("declare class", "class O {\n}\n print O;", "Class O\n");
+     }
+
+
      @Test 
      public void testInstantiation() {
           runAndExpect("new object", "class O {} var o = O(); print o;", "O\n");
@@ -68,6 +74,6 @@ public class ClassTest extends AbstractLoxTest {
           runAndExpect("assign property expression", "class O {} var o = O(); print o.a = 3;", "3\n");
      }
      
-
+     
 }
 

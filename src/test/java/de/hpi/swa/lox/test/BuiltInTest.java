@@ -14,5 +14,24 @@ public class BuiltInTest extends AbstractLoxTest {
         assertTrue("Expected a number but got: " + output, output.matches("[0-9.E]+"));
     }
 
+    @Test
+    public void testNumberInt() {
+        runAndExpect("parse number", 
+            "print 3 + Number(\"4\");",  "7\n");
+    }
+
+    @Test
+    public void testNumberDouble() {
+        runAndExpect("parse double", 
+            "print 1 + Number(\"0.5\");",  "1.5\n");
+    }
+
+
+    @Test
+    public void testStringConversion() {
+        runAndExpect("convert number to string", 
+            "print \"Hello\" + String(3);",  "Hello3\n");
+    }
+
 
 }

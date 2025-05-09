@@ -1,10 +1,11 @@
 package de.hpi.swa.lox.runtime.objects;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.interop.TruffleObject;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.Shape;
 
-public class LoxClass extends DynamicObject {
+public class LoxClass extends DynamicObject implements TruffleObject {
     static final Shape classShape = Shape.newBuilder().allowImplicitCastIntToLong(true).build();
 
     final String name;

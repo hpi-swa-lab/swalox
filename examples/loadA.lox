@@ -1,0 +1,2 @@
+var B = load("examples/returnA.lox");
+print B;

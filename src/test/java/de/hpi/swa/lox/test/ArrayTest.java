@@ -37,5 +37,12 @@ public class ArrayTest extends AbstractLoxTest {
         runAndExpect("print contents", "var a = []; a[100]=42; print a[100];", "42\n");
     }
 
+    @Test
+    public void testArrayLength() {
+        runAndExpect("print length", "var a = []; a[10]=1; print a.length;", "11\n");
+    }
+
+
+
 
 }

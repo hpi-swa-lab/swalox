@@ -1,0 +1,35 @@
+
+load("benchmark.lox");
+
+class Sieve < Benchmark {
+    sieve(flags, size) {
+      var primeCount = 0;
+  
+      for (var i = 2; i <= size; i = i + 1) {
+        if (flags[i - 1]) {
+          primeCount = primeCount + 1;
+          var k = i + i;
+          while (k <= size) {
+            flags[k - 1] = false;
+            k = k + i;
+          }
+        }
+      }
+      return primeCount;
+    }
+  
+    benchmark() {
+      var flags = [];
+      for (var i = 0; i < 5000; i = i + 1) {
+        flags[i] = true;
+      }
+      return this.sieve(flags, 5000);
+    }
+  
+    verifyResult(result) {
+      return 669 == result;
+    }
+  }
+  
+return Sieve();
+  

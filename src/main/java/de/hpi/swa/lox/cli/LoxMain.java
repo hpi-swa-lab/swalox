@@ -1,7 +1,6 @@
 package de.hpi.swa.lox.cli;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,13 +22,14 @@ public class LoxMain extends AbstractLanguageLauncher {
     private String command;
     private File file;
     private int iterations;
+    private List<String> args = new ArrayList<>(); // everything after the file
 
     @Override
     protected List<String> preprocessArguments(List<String> arguments, Map<String, String> polyglotOptions) {
         List<String> unrecognized = new ArrayList<>();
         for (int i = 0; i < arguments.size(); i++) {
             var arg = arguments.get(i);
-            if (arg.startsWith("-")) {
+            if (file == null && arg.startsWith("-")) {
                 switch (arg) {
                     case "-c":
                         if (i != arguments.size() - 2) {
@@ -52,14 +52,15 @@ public class LoxMain extends AbstractLanguageLauncher {
                     default:
                         unrecognized.add(arg);
                 }
-            } else if (i != arguments.size() - 1) {
-                System.err.println("filename must be the last argument");
-                System.exit(1);
             } else {
-                file = Path.of(arg).toFile();
-                if (!file.isFile()) {
-                    System.err.println("Cannot access file " + arg);
-                    System.exit(1);
+                if (file == null) {
+                    file = Path.of(arg).toFile();
+                    if (!file.isFile()) {
+                        System.err.println("Cannot access file " + arg);
+                        System.exit(1);
+                    }
+                } else {
+                    args.add(arg);
                 }
             }
         }
@@ -69,19 +70,18 @@ public class LoxMain extends AbstractLanguageLauncher {
     @Override
     protected void launch(Builder contextBuilder) {
         Source source = null;
-        try (var context = contextBuilder.build()) {
+        String[] argsArray = args.toArray(new String[args.size()]);
+        try (var context = contextBuilder.arguments("lox", argsArray).build()) {
+
             if (iterations > 0) {
                 if (file == null && command == null) {
                     System.err.println("-b cannot be used for the REPL");
                     System.exit(1);
                 }
                 if (file != null) {
-                    try {
-                        source = Source.newBuilder("lox", file).build();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        System.exit(1);
-                    }
+                    // use load to enable relative paths
+                    String command = "load(\"" + file.getPath().replace('\\', '/') + "\");nil;";
+                    source = Source.newBuilder("lox", command, file.getPath()).buildLiteral();
                 } else {
                     source = Source.newBuilder("lox", command, "<command>").buildLiteral();
                 }
@@ -97,21 +97,21 @@ public class LoxMain extends AbstractLanguageLauncher {
                     long t1 = System.nanoTime();
                     long iterationTime = t1 - t0;
                     totalTime += iterationTime;
-                    // System.err.println("Iteration " + (i + 1) + ": " + (iterationTime / 1_000_000) + "ms");
+                    // System.err.println("Iteration " + (i + 1) + ": " + (iterationTime /
+                    // 1_000_000) + "ms");
                 }
                 long averageTime = totalTime / iterations;
                 System.err.println("Average time: " + (averageTime / 1_000_000) + "ms");
             } else {
                 if (file != null) {
+                    // use load to enable relative paths
+                    String command = "load(\"" + file.getPath().replace('\\', '/') + "\");nil;";
+                    source = Source.newBuilder("lox", command, file.getPath()).buildLiteral();
+                    // source = Source.newBuilder("lox", file).build();
                     try {
-                        source = Source.newBuilder("lox", file).build();
-                        try {
-                            context.eval(source);
-                        } catch (Exception e) {
-                            printException(e);
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                        context.eval(source);
+                    } catch (Exception e) {
+                        printException(e);
                     }
                 } else if (command != null) {
                     try {
@@ -126,20 +126,20 @@ public class LoxMain extends AbstractLanguageLauncher {
         }
     }
 
-        private void startEvalLoop(Context context) {
-            while (true) {
-                System.out.print("> ");
-                String line = System.console().readLine();
-                if (line == null) {
-                    break;
-                }
-                evaluateExpression(context, line);
+    private void startEvalLoop(Context context) {
+        while (true) {
+            System.out.print("> ");
+            String line = System.console().readLine();
+            if (line == null) {
+                break;
             }
+            evaluateExpression(context, line);
         }
+    }
 
-        public void evaluateExpression(Context context, String line) {
-            try {
-                var result = context.eval("lox", line);
+    public void evaluateExpression(Context context, String line) {
+        try {
+            var result = context.eval("lox", line);
             if (!result.isNull()) {
                 System.out.println(result);
             }

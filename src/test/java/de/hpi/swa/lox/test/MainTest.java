@@ -59,6 +59,24 @@ public class MainTest extends AbstractLoxTest {
         assertEquals("Should print true", "true\n", normalize(outContent.toString()));
     }
 
+    @Test
+    public void testFileWithArgs() throws IOException {
+        // Create a temporary file
+        File tempFile = File.createTempFile("testFile", ".lox");
+        tempFile.deleteOnExit();
+
+        // Write to the temporary file
+        try (FileWriter writer = new FileWriter(tempFile)) {
+            writer.write("print ARGV[0];");
+        }
+
+        // Execute the LoxMain with the temporary file
+        LoxMain.main(new String[]{tempFile.getAbsolutePath(), "hello"});
+
+        // Verify the output
+        assertEquals("Should print hello", "hello\n", normalize(outContent.toString()));
+    }
+
 
     @Test
     public void testFilePrintsError() throws IOException {

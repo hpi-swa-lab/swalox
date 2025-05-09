@@ -10,9 +10,17 @@ public abstract class LoxRootNode extends RootNode {
 
     public LoxLanguage language;
 
+    public String name;
+
     public LoxRootNode(LoxLanguage lang, FrameDescriptor frameDescriptor) {
         super(lang, frameDescriptor);
         language = lang;
+        name = "no name";
+    }
+
+    @Override
+    public String getName() {
+        return name;
     }
 
     @Override

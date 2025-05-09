@@ -72,7 +72,7 @@ public final class BinaryOperations {
         @Fallback
         @TruffleBoundary
         Object doOO(Object left, Object right) {
-            throw new RuntimeException("Type Error: Invalid operands for binary operation");
+            throw new RuntimeException("Type Error: Invalid operands for binary operation " + left + " and " + right);
         }
     }
     

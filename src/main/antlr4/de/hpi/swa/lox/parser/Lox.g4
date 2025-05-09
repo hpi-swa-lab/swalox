@@ -19,7 +19,7 @@ declaration    :  classDecl
                | varDecl
                | statement ;
 
-classDecl      : 'class' IDENTIFIER 
+classDecl      : 'class' name=IDENTIFIER ('<' extends=IDENTIFIER )?
                  '{' function* '}' ;
 
 statement      : exprStmt
@@ -70,7 +70,9 @@ call           : primary callArguments* ;
 
 callArguments : '(' arguments? ')' | '.' IDENTIFIER;
 
-primary         : number | string | true | false | nil | array |  arrayExpr | variableExpr | '(' expression ')';
+primary         : number | string | true | false | nil | array |  superExpr | arrayExpr | variableExpr | '(' expression ')' ;
+
+superExpr   :   'super' '.' IDENTIFIER;
 
 variableExpr    : IDENTIFIER;
 arrayExpr       : left=variableExpr '[' index=expression ']';

@@ -6,8 +6,6 @@
 
 The Lox implementation is developed as part of the Build Your Own Programming Language course at Software Architecture Group, Hasso Plattner Institute, Potsdam. 
 
-
-
 ## Getting Started 
 
 See Getting Started section in [BYOPL-2024_Overview](https://1drv.ms/b/s!AosvRVbmrjPTm_YQOBq8GXW3BYNq5A?e=EaAI5S).

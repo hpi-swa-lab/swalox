@@ -56,6 +56,7 @@ import de.hpi.swa.lox.parser.LoxParser.ProgramContext;
 import de.hpi.swa.lox.parser.LoxParser.ReturnStmtContext;
 import de.hpi.swa.lox.parser.LoxParser.StatementContext;
 import de.hpi.swa.lox.parser.LoxParser.StringContext;
+import de.hpi.swa.lox.parser.LoxParser.SuperExprContext;
 import de.hpi.swa.lox.parser.LoxParser.TermContext;
 import de.hpi.swa.lox.parser.LoxParser.TrueContext;
 import de.hpi.swa.lox.parser.LoxParser.UnaryContext;
@@ -83,6 +84,7 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
         final LexicalScope parent;
         boolean isFunction; 
         final Map<String, BytecodeLocal> locals;
+
         private Stack<LocalVariable> currentStore = new Stack<>();
 
         LexicalScope(LexicalScope parent, boolean isFunction) {            
@@ -697,6 +699,7 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
     @Override
     public Void visitVarDecl(VarDeclContext ctx) {
         var localName = ctx.IDENTIFIER().getText();
+        // TODO: check for reserved words, e.g. super, this, etc.   
         curScope.define(localName, ctx);
         if (ctx.expression() != null) {
             curScope.beginStore(localName);
@@ -863,8 +866,8 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
             b.endReturn();
 
         LoxRootNode node = b.endRoot();
+        node.name = name;
         b.emitLoxCreateFunction(name, node.getCallTarget(), curScope.maxFrameLevel);
-
         return null;
     }
 
@@ -901,22 +904,49 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
 
     @Override
     public Void visitClassDecl(ClassDeclContext ctx) {
-        String name = ctx.IDENTIFIER().getText();
-
+        String name = ctx.name.getText();
         curScope.define(name, ctx);
         curScope.beginStore(name);
-        b.beginLoxDeclareClass(name);            
+        curScope = new LexicalScope(curScope);
+        curScope.define("super", ctx);  
+        
+        b.beginLoxDeclareClass(name);       
+            b.beginBlock();
+            if (ctx.extends_ != null) {
+                String superclassName = ctx.extends_.getText();                
+                curScope.beginStore("super");  
+                    curScope.load(superclassName);
+                curScope.endStore();
+            } else {
+                curScope.beginStore("super");  
+                    b.emitLoadConstant(Nil.INSTANCE);
+                curScope.endStore();
+            }
+            curScope.load("super");
+            b.endBlock();
             for (var fun : ctx.function()) {
                 visitFunction(fun);
             }
         b.endLoxDeclareClass();
+
+        curScope = curScope.parent;
         curScope.endStore();
+        return null;
+    }
+
+    @Override
+    public Void visitSuperExpr(SuperExprContext ctx) {
+        String name = ctx.IDENTIFIER().getText();
+        b.beginLoxReadSuper(name);  
+            b.emitLoxLoadThis();
+            curScope.load("super");
+        b.endLoxReadSuper();
         return null;
     }
 
 
     // Attributions
-
+    
     private void beginAttribution(ParseTree tree) {
         beginAttribution(getStartIndex(tree), getEndIndex(tree));
     }

@@ -16,6 +16,15 @@ public class LoxArray implements TruffleObject {
         elements = new Object[10];
     }
 
+    public int size() {
+        return size;
+    }
+
+    // availabble space without growing
+    public int capacity() {
+        return elements.length;
+    }
+
     public Object get(int index) {
         if (elements.length <= index || index < 0) {
             return Nil.INSTANCE;
@@ -38,6 +47,19 @@ public class LoxArray implements TruffleObject {
         }
         elements[index] = value;
     }
+
+    // does not need to grow, but size changes
+    public void setInCapacity(int index, Object value) {
+        if (index >= size) {
+            size = index + 1;
+        }
+        elements[index] = value;
+    }
+
+    public void setInSize(int index, Object value) {
+        elements[index] = value;
+    }
+
 
     @TruffleBoundary
     private void ensureCapacity() {

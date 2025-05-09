@@ -1,0 +1,34 @@
+load("run.lox");
+  
+fun processArguments(args) {
+    var run = Run(args[0]);
+
+    if (args.length > 1) {
+        run.numIterations = Number(args[1]);
+        if (args.length > 2) {
+            run.innerIterations = Number(args[2]);
+        }
+    }
+    return run;
+}
+
+fun printUsage() {
+    print "harness.lox [benchmark] [num-iterations [inner-iter]]";
+    print "";
+    print "  benchmark      - benchmark class name";
+    print "  num-iterations - number of times to execute benchmark, default: 1";
+    print "  inner-iter     - number of times the benchmark is executed in an inner loop,";
+    print "                   which is measured in total, default: 1";
+}
+
+var args = ARGV;
+
+if (args.length < 1) {
+    printUsage();
+    return nil;
+}
+
+var run = processArguments(args);
+run.runBenchmark();
+run.printTotal();
+

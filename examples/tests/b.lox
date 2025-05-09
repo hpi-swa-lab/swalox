@@ -1,0 +1,3 @@
+load("a.lox"); // test for relative path loading
+
+var B = A;
