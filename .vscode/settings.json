@@ -23,5 +23,10 @@
     "java.jdt.ls.vmargs": "-XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx2G -Xms100m -Xlog:disable",
     "makefile.configureOnOpen": false,
 
+    "editor.detectIndentation": false,
+    "[java]": {
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true
+    }
     "java.addExports": [ "javax.swing", "java.awt" ]
 }

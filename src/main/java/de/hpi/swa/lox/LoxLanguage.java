@@ -5,7 +5,10 @@ import java.util.Map;
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.TruffleLanguage;
+import com.oracle.truffle.api.debug.DebuggerTags;
 import com.oracle.truffle.api.dsl.Bind;
+import com.oracle.truffle.api.instrumentation.ProvidedTags;
+import com.oracle.truffle.api.instrumentation.StandardTags;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.Source;
 
@@ -21,6 +24,9 @@ import de.hpi.swa.lox.runtime.LoxContext;
 
 @Bind.DefaultExpression("get($node)")
 @TruffleLanguage.Registration(id = LoxLanguage.ID)
+@ProvidedTags({ StandardTags.RootTag.class, StandardTags.CallTag.class, StandardTags.StatementTag.class,
+        StandardTags.WriteVariableTag.class, StandardTags.ReadVariableTag.class, StandardTags.RootBodyTag.class,
+        StandardTags.ExpressionTag.class, DebuggerTags.AlwaysHalt.class })
 public class LoxLanguage extends TruffleLanguage<LoxContext> {
 
     public static final String ID = "lox";
@@ -63,5 +69,4 @@ public class LoxLanguage extends TruffleLanguage<LoxContext> {
     protected boolean isThreadAccessAllowed(Thread thread, boolean singleThreaded) {
         return true;
     }
-
 }

@@ -16,9 +16,10 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.1.2</version>
         <configuration>
-            <dependenciesToScan>
+            <!-- DISABLE TCK  for dev -->  
+            <!-- <dependenciesToScan>
                 <dependency>org.graalvm.truffle:truffle-tck-tests</dependency>
-            </dependenciesToScan>
+            </dependenciesToScan> -->
             <argLine>
                --add-exports=java.base/jdk.internal.module=truffle.tck
                -Dpolyglot.engine.WarnInterpreterOnly=false
@@ -97,10 +98,28 @@
   </build>
 
   <dependencies>
-      <dependency>
+    <dependency>
+      <groupId>org.graalvm.polyglot</groupId>
+      <artifactId>inspect-community</artifactId>
+      <version>${graalvm.version}</version>
+      <type>pom</type>
+    </dependency>
+    <dependency>
+      <groupId>org.graalvm.polyglot</groupId>
+      <artifactId>dap-community</artifactId>
+      <version>${graalvm.version}</version>
+      <type>pom</type>
+    </dependency>
+    <dependency>
       <groupId>org.graalvm.truffle</groupId>
       <artifactId>truffle-sl</artifactId>
       <version>${graalvm.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.graalvm.js</groupId>
+      <artifactId>js-community</artifactId>
+      <version>${graalvm.version}</version>
+      <type>pom</type>
     </dependency>
     <dependency>
       <groupId>org.graalvm.polyglot</groupId>

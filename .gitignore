@@ -49,3 +49,4 @@ graal_dumps/
 benchmark.data
 Rplots.pdf
 box_plot.png
+flamegraph.svg

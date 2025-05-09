@@ -12,8 +12,11 @@ import com.oracle.truffle.api.interop.TruffleObject;
 import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
+import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.strings.TruffleString;
 import com.oracle.truffle.api.strings.TruffleString.Encoding;
+
+import de.hpi.swa.lox.nodes.LoxRootNode;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
@@ -21,27 +24,31 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 public class LoxFunction implements TruffleObject {
 
     public final String name;
-    private final RootCallTarget callTarget;
+    private final RootNode node;
     private final MaterializedFrame outerFrame;
     private final LoxObject self;
 
-    private LoxFunction(String name, RootCallTarget callTarget, MaterializedFrame outerFrame, LoxObject self) {
+    private LoxFunction(String name, RootNode node, MaterializedFrame outerFrame, LoxObject self) {
         this.name = name;
-        this.callTarget = callTarget;
+        this.node = node;
         this.outerFrame = outerFrame;
         this.self = self;
     }
 
-    public LoxFunction(String name, RootCallTarget callTarget, MaterializedFrame outerFrame) {
-        this(name, callTarget, outerFrame, null);
+    public LoxFunction(String name, RootNode node, MaterializedFrame outerFrame) {
+        this(name, node, outerFrame, null);
     }
 
     public LoxFunction(LoxObject obj, LoxFunction m) {
-        this(m.name, m.callTarget, m.outerFrame, obj);
+        this(m.name, m.node, m.outerFrame, obj);
+    }
+
+    public RootNode node() {
+        return node;
     }
 
     public RootCallTarget getCallTarget() {
-        return callTarget;
+        return node.getCallTarget();
     }
 
     public Object[] createArguments(Object[] userArguments) {
@@ -103,7 +110,7 @@ public class LoxFunction implements TruffleObject {
         // }
         // }
 
-        var result = callNode.call(callTarget, args);
+        var result = callNode.call(this.getCallTarget(), args);
         if (result instanceof BigInteger) {
             return convertBigIntegerToDouble(result); // Truffle does not support BigInteger directly
         }

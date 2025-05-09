@@ -1,0 +1,36 @@
+    var a = 2; // variable declaration
+
+    fun f() { // function declaration
+        return 3; // return statement
+    }
+
+    f(); // function call
+
+    class A {
+        // class declaration
+        m() {
+        // method declaration
+        }
+    }
+
+    for (
+            var i = 0;  // initialization
+            i < 3; // condition
+            i = i + 1 // increment
+        ) { // for statement
+        print i; // function body
+    }
+
+    while(a < 100) {
+        a = a * a; // while statement
+    }
+
+    if (a > 3) {
+        return 6; // if statement
+    }
+
+    {
+    var b = 3 + 4; 
+    }
+
+

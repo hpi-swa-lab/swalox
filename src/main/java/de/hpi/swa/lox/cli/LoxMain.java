@@ -21,7 +21,7 @@ public class LoxMain extends AbstractLanguageLauncher {
 
     @Override
     protected String[] getDefaultLanguages() {
-        return new String[] { getLanguageId(), "sl" };
+        return new String[] { getLanguageId(), "sl", "js" };
     }
 
     private String command;
@@ -76,7 +76,9 @@ public class LoxMain extends AbstractLanguageLauncher {
     protected void launch(Builder contextBuilder) {
         Source source = null;
         String[] argsArray = args.toArray(new String[args.size()]);
-        try (var context = contextBuilder.arguments("lox", argsArray).build()) {
+        try (var context = contextBuilder
+                .arguments("lox", argsArray)
+                .build()) {
 
             if (iterations > 0) {
                 if (file == null && command == null) {

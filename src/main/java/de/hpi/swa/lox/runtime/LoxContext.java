@@ -30,12 +30,12 @@ public final class LoxContext {
         this.globalObject.set("ARGV", ARGV);
 
         var args = env.getApplicationArguments();
-        for(int i = 0; i < args.length; i++){
+        for (int i = 0; i < args.length; i++) {
             ARGV.set(i, TruffleString.fromJavaStringUncached(args[i], TruffleString.Encoding.UTF_8));
         }
 
         for (var e : builtins.entrySet()) {
-            this.globalObject.set(e.getKey(), new LoxFunction(e.getKey(), e.getValue().getCallTarget(), null));
+            this.globalObject.set(e.getKey(), new LoxFunction(e.getKey(), e.getValue(), null));
         }
     }
 

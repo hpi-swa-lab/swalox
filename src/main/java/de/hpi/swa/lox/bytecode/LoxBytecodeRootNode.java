@@ -5,12 +5,12 @@ import java.math.BigInteger;
 import java.util.Objects;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.bytecode.BytecodeNode;
 import com.oracle.truffle.api.bytecode.BytecodeRootNode;
 import com.oracle.truffle.api.bytecode.ConstantOperand;
 import com.oracle.truffle.api.bytecode.GenerateBytecode;
 import com.oracle.truffle.api.bytecode.LocalAccessor;
+
 import com.oracle.truffle.api.bytecode.MaterializedLocalAccessor;
 import com.oracle.truffle.api.bytecode.Operation;
 import com.oracle.truffle.api.bytecode.ShortCircuitOperation;
@@ -30,6 +30,7 @@ import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.interop.UnsupportedTypeException;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -50,12 +51,18 @@ import de.hpi.swa.lox.runtime.objects.Nil;
 import de.hpi.swa.lox.parser.LoxRuntimeError;
 
 import com.oracle.truffle.api.bytecode.ShortCircuitOperation.Operator;
+import com.oracle.truffle.api.debug.DebuggerTags;
 
 @GenerateBytecode(//
         languageClass = LoxLanguage.class, //
-        boxingEliminationTypes = { long.class }, // , boolean.class // TODO: bug?
+        boxingEliminationTypes = { long.class }, // , boolean.class
         enableUncachedInterpreter = true, //
         enableMaterializedLocalAccesses = true, //
+        enableRootTagging = true, //
+        enableRootBodyTagging = false, //
+        enableTagInstrumentation = true, //
+        // DISABLED untile custom scope is finished
+        // tagTreeNodeLibrary = LoxBytecodeScopeExports.class,
         // storeBytecodeIndexInFrame = true, //
         // defaultLocalValue = Nil.INSTANCE, // does not work?
         enableBlockScoping = true, // should be enabled by default
@@ -130,7 +137,7 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
         }
     }
 
-    @Operation
+    @Operation(tags = DebuggerTags.AlwaysHalt.class)
     public static final class LoxHalt {
         @TruffleBoundary
         @Specialization
@@ -428,7 +435,7 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
 
         @Fallback
         static Object fallback(Object left, Object right, @Bind Node node) {
-            // #TODO add .equals() here?
+            // maybe add .equals() here?
 
             return left == right; // equality is special... one should be able to ask any question and get
                                   // false...
@@ -717,14 +724,14 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
 
     @Operation
     @ConstantOperand(type = String.class)
-    @ConstantOperand(type = RootCallTarget.class)
+    @ConstantOperand(type = RootNode.class)
     @ConstantOperand(type = int.class)
     public static final class LoxCreateFunction {
 
         @Specialization
-        static LoxFunction doDefault(VirtualFrame frame, String name, RootCallTarget callTarget, int frameLevel) {
+        static LoxFunction doDefault(VirtualFrame frame, String name, RootNode node, int frameLevel) {
             MaterializedFrame materializedFrame = frameLevel > 0 ? frame.materialize() : null;
-            return new LoxFunction(name, callTarget, materializedFrame);
+            return new LoxFunction(name, node, materializedFrame);
         }
     }
 
@@ -858,7 +865,7 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
     public static abstract class ReadPropertyNode extends Node {
         public abstract Object execute(String name, Object obj);
 
-        // TODO: usage of String and equals can "explode" and may need @TruffleBoundary
+        // The usage of String and equals can "explode" and may need @TruffleBoundary
         // a solution would be to use TruffleStrings as property names
         @Specialization
         public static Object read(String name, LoxArray array) {

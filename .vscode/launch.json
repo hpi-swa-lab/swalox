@@ -35,6 +35,26 @@
             "sourceRoots": [
                 "${workspaceFolder}/src/main/java"
             ]
+        },
+        {
+            "type": "java",
+            "name": "Attach to java remote debugger",
+            "projectName": "lox-language",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 5005,
+            "sourceRoots": [
+                "${workspaceFolder}/src/main/java"
+            ]
+        },
+        {
+            "type": "debugpy",
+            "name": "Attach dap",
+            "request": "attach",
+            "connect": {
+                "host": "localhost",
+                "port": 4711
+            }
         }
     ]
 }

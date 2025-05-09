@@ -1,0 +1,8 @@
+
+
+fun f(x) {
+    var a = x + 1;
+    return a;
+}
+
+print f(3);

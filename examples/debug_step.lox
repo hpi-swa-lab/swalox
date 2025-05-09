@@ -1,0 +1,38 @@
+{
+
+    var x = [];
+    // x[nil] = 4; // force error
+
+    var a = 3;
+
+class X {
+
+}
+
+fun f() {
+    
+}
+
+a = 4;
+
+if (a < 4) {
+    a = a * 5;
+} 
+
+var b = a + 1;
+    b = b + 1;
+
+var c = [];
+c[0] = a;
+
+a = a + 1;
+
+while(  a < 15) {
+    a = a + 1;
+}   
+
+
+print a;
+
+
+}
