@@ -19,6 +19,11 @@ public class LoxMain extends AbstractLanguageLauncher {
         new LoxMain().launch(args);
     }
 
+    @Override
+    protected String[] getDefaultLanguages() {
+        return new String[] { getLanguageId(), "sl" };
+    }
+
     private String command;
     private File file;
     private int iterations;
@@ -132,9 +137,9 @@ public class LoxMain extends AbstractLanguageLauncher {
             String line = System.console().readLine();
             if (line == null) {
                 break;
-            }
-            evaluateExpression(context, line);
         }
+            evaluateExpression(context, line);
+    }
     }
 
     public void evaluateExpression(Context context, String line) {

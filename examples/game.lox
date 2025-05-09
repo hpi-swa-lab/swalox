@@ -1,0 +1,125 @@
+var Math = lookup("java", "java.lang.Math");
+var Thread = lookup("java", "java.lang.Thread");
+var Color = lookup("java", "java.awt.Color");
+var KeyEvent = lookup("java", "java.awt.event.KeyEvent");
+
+var LoxDisplay = lookup("java", "de.hpi.swa.lox.runtime.LoxDisplay");
+
+
+
+class Ball {
+  init(game) {
+    this.game = game;
+    this.x = this.game.xLimit * 0.5;
+    this.y = this.game.yLimit * 0.5;
+    this.xVel = 0;
+    this.yVel = 0;
+    this.size = 20;
+  }
+
+  step() {
+    var factor = 0.1;
+    this.x = this.x + factor * this.xVel;
+    this.y = this.y + factor * this.yVel;
+    this.checkCollision();
+  }
+
+  checkCollision() {
+    if (this.x > this.game.xLimit) {
+      this.x = this.game.xLimit; 
+      this.xVel = 0 - Math.abs(this.xVel); 
+    }
+
+    if (this.x < 0) {
+      this.x = 0; 
+      this.xVel = Math.abs(this.xVel); 
+    }
+
+    if (this.y > this.game.yLimit) {
+      this.y = this.game.yLimit; 
+      this.yVel = 0 - Math.abs(this.yVel); 
+    }
+
+    if (this.y < 0) {
+      this.y = 0; 
+      this.yVel = Math.abs(this.yVel); 
+    }
+  }
+}
+
+class Game  {
+  run() {
+    this.xLimit = 1000;
+    this.yLimit = 1000;
+    this.setupDisplay();
+    
+
+    this.balls = [];
+    this.ball = Ball(this);
+    this.balls[0] = this.ball;
+    this.balls[1] = Ball(this);
+    this.balls[1].xVel = 1;
+    this.balls[1].yVel = 1;
+    
+    while(true) {
+      this.step();
+      this.display.panel.repaint();
+      Thread.sleep(1);
+    }
+  }
+
+  step() {
+    for (var j = 0; j < this.balls.length; j = j + 1) {
+      var ball = this.balls[j];  
+      ball.step();
+    }
+  }
+
+  paint(g2d) {
+    
+    g2d.setColor(Color.BLUE);
+
+    for (var j = 0; j < this.balls.length; j = j + 1) {
+        var ball = this.balls[j]; 
+        g2d.fillOval(round(ball.x), round(ball.y), ball.size, ball.size); // Filled circle
+    }
+  }
+
+
+  keypressed(key) {    
+    print "key " + String(key);
+    var ball = this.ball;
+    if (key == KeyEvent.VK_UP) { 
+      ball.yVel = -1;
+      ball.xVel = 0;
+    }
+
+    if (key == KeyEvent.VK_DOWN) { 
+      ball.yVel = 1;
+      ball.xVel = 0;
+    }
+    
+    if (key == KeyEvent.VK_LEFT) {
+      ball.yVel = 0;
+      ball.xVel = -1;
+    }
+    if (key == KeyEvent.VK_RIGHT) {
+      ball.yVel = 0;
+      ball.xVel = 1;
+    }
+    if (key == KeyEvent.VK_SPACE) {
+      ball.size = ball.size + 1;
+    }
+  }
+
+  setupDisplay()  {
+    this.display = LoxDisplay.create();
+    this.display.paint = this.paint;
+    this.display.keypressed = this.keypressed;    
+    this.display.frame.setSize(this.xLimit, this.yLimit);
+  }
+}
+
+Game().run();
+
+

@@ -23,12 +23,18 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.interop.ArityException;
+import com.oracle.truffle.api.interop.InteropLibrary;
+import com.oracle.truffle.api.interop.UnknownIdentifierException;
+import com.oracle.truffle.api.interop.UnsupportedMessageException;
+import com.oracle.truffle.api.interop.UnsupportedTypeException;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.source.SourceSection;
 
 import de.hpi.swa.lox.LoxLanguage;
+import de.hpi.swa.lox.nodes.LoxConvertValueNode;
 import de.hpi.swa.lox.nodes.LoxRootNode;
 import de.hpi.swa.lox.nodes.operations.BinaryOperations.AddNode;
 import de.hpi.swa.lox.nodes.operations.BinaryOperations.MultiplyNode;
@@ -93,6 +99,11 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
         }
     }
 
+    @Fallback
+    public static boolean fromObject(Object x) {
+        return x != Nil.INSTANCE;
+    }
+
     // Print Statement
     @Operation
     public static final class LoxPrint {
@@ -108,6 +119,14 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    @Operation
+    public static final class LoxValue {
+        @Specialization
+        static Object doDefault(Object value, @Cached LoxConvertValueNode convertValueNode) {
+            return convertValueNode.execute(value);
         }
     }
 
@@ -128,14 +147,11 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
     // }
 
     // @Fallback
-    // static Object fallback(Object left, Object right, @Bind Node node) {
-    // throw typeError(node, "|", left, right);
     // }
     // }
 
     // public static final class LoxAnd {
     // @Specialization
-    // static boolean doBoolean(boolean left, boolean right) {
     // return left && right;
     // }
 
@@ -171,7 +187,7 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
         @Specialization
         static Object doOp(Object left, Object right,
                 @Bind Node node,
-                @Cached MultiplyNode multiplyNode) {
+                @Cached MultiplyNode multiplyNode) { // Idea @Cached CastToLongNode castToLongNode
             return multiplyNode.execute(left, right);
         }
     }
@@ -412,6 +428,8 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
 
         @Fallback
         static Object fallback(Object left, Object right, @Bind Node node) {
+            // #TODO add .equals() here?
+
             return left == right; // equality is special... one should be able to ask any question and get
                                   // false...
 
@@ -512,6 +530,7 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
         static boolean doBoolean(boolean value) {
             return !value;
         }
+
     }
 
     @TruffleBoundary
@@ -714,14 +733,26 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
 
         @Specialization(limit = "1")
         static Object classInstationation(LoxClass klass, @Variadic Object[] arguments,
+                // @CachedLibrary("klass") DynamicObjectLibrary dylib,
+                // @CachedLibrary(limit = "1") InteropLibrary interop,
                 @Cached LoxCallFunctionNode callNode,
                 @Cached LookupMethodNode lookupMethod) {
             var object = new LoxObject(klass);
-
+            // Object javaClass;
+            // Object javaObject = null;
+            // if ((javaClass = dylib.getOrDefault(klass, "javaSuperclass", null)) != null)
+            // {
+            // Object[] javaConstructorArguments = Arrays.copyOf(arguments, arguments.length
+            // + 1);
+            // javaConstructorArguments[arguments.length] = object;
+            // javaObject = interop.instantiate(javaClass, javaConstructorArguments);
+            // dylib.put(object, "javaThis", javaObject);
+            // }
             LoxFunction function = lookupMethod.execute(object, klass, "init");
             if (function != null) {
                 callNode.execute(function, arguments);
             }
+            // if (javaObject != null) { return javaObject; }
             return object;
 
         }
@@ -732,9 +763,26 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
             return callNode.execute(obj, arguments);
         }
 
-        @TruffleBoundary
         @Specialization
-        static Object doDefault(Object obj, @Variadic Object[] arguments, @Bind Node node) {
+        static Object doDefault(Object obj, @Variadic Object[] arguments, @Bind Node node,
+                @CachedLibrary(limit = "1") InteropLibrary interop) {
+            if (interop.isExecutable(obj)) {
+                try {
+                    return interop.execute(obj, arguments);
+                } catch (UnsupportedTypeException | ArityException | UnsupportedMessageException e) {
+                    return error(obj, node);
+                }
+            } else {
+                try {
+                    return interop.instantiate(obj, arguments);
+                } catch (UnsupportedTypeException | ArityException | UnsupportedMessageException e) {
+                    return error(obj, node);
+                }
+            }
+        }
+
+        @TruffleBoundary
+        static Object error(Object obj, Node node) {
             throw new LoxRuntimeError("cannot call " + obj, node);
         }
     }
@@ -781,11 +829,34 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
             dylib.putConstant(klass, "super", superclass, 0);
             return klass;
         }
+
+        // @Fallback
+        // @TruffleBoundary
+        // public static LoxClass declare(String name, Object superclass, @Variadic
+        // Object[] methods,
+        // @CachedLibrary(limit = "1") DynamicObjectLibrary dylib,
+        // @Bind LoxContext context,
+        // @Bind Node node) {
+        // if (context.getEnv().isHostObject(superclass)) {
+        // var sc = context.getEnv().asHostObject(superclass);
+        // if (sc instanceof Class<?> superClass) {
+        // var newJavaSubclass = context.getEnv().createHostAdapter(new
+        // Object[]{context.getEnv().asHostSymbol(superClass)});
+        // var klass = new LoxClass(name);
+        // for (var m : methods) {
+        // dylib.putConstant(klass, ((LoxFunction ) m).name, m, 0);
+        // }
+        // dylib.putConstant(klass, "javaSuperclass", newJavaSubclass, 0);
+        // return klass;
+        // }
+        // }
+        // throw new LoxRuntimeError("Superclass must be a class", node);
+        // }
     }
 
-    @Operation
-    @ConstantOperand(type = String.class)
-    public static final class LoxReadProperty {
+    @GenerateUncached
+    public static abstract class ReadPropertyNode extends Node {
+        public abstract Object execute(String name, Object obj);
 
         // TODO: usage of String and equals can "explode" and may need @TruffleBoundary
         // a solution would be to use TruffleStrings as property names
@@ -812,10 +883,31 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
             return result;
         }
 
-        @Fallback
+        @Specialization
+        public static Object read(String name, Object obj,
+                @Bind Node node,
+                @CachedLibrary(limit = "1") InteropLibrary interop) {
+            try {
+                return interop.readMember(obj, name);
+            } catch (UnsupportedMessageException | UnknownIdentifierException e) {
+                return error(name, obj, node);
+            }
+        }
+
         @TruffleBoundary
-        public static Object read(String name, Object obj, @Bind Node node) {
+        static Object error(String name, Object obj, @Bind Node node) {
             throw new LoxRuntimeError("Cannot read property " + name + " of " + obj, node);
+        }
+
+    }
+
+    @Operation
+    @ConstantOperand(type = String.class)
+    public static final class LoxReadProperty {
+
+        @Specialization
+        public static Object read(String name, Object obj, @Cached ReadPropertyNode readProperty) {
+            return readProperty.execute(name, obj);
         }
     }
 
@@ -898,11 +990,41 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
     @Operation
     @ConstantOperand(type = String.class)
     public static final class LoxWriteProperty {
+
+        @Specialization
+        public static Object write(String name, Object obj, Object value, @Cached WritePropertyNode writeProperty) {
+            return writeProperty.execute(name, obj, value);
+        }
+
+    }
+
+    @GenerateUncached
+    public static abstract class WritePropertyNode extends Node {
+
+        public abstract Object execute(String name, Object obj, Object value);
+
         @Specialization(limit = "1")
         public static Object write(String name, LoxObject obj, Object value,
                 @CachedLibrary("obj") DynamicObjectLibrary dylib) {
             dylib.put(obj, name, value);
             return value;
+        }
+
+        @Specialization(limit = "1")
+        public static Object interopWrite(String name, Object obj, Object value,
+                @CachedLibrary(limit = "1") InteropLibrary interop,
+                @Bind Node node) {
+            try {
+                interop.writeMember(obj, name, value);
+            } catch (UnsupportedTypeException | UnsupportedMessageException | UnknownIdentifierException e) {
+                error(name, obj, node);
+            }
+            return value;
+        }
+
+        @TruffleBoundary
+        private static void error(String name, Object obj, Node node) {
+            throw new LoxRuntimeError("Cannot write property " + name + " of " + obj, node);
         }
     }
 

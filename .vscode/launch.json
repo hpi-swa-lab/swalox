@@ -24,6 +24,17 @@
             "sourceRoots": [
                 "${workspaceFolder}/src/main/java"
             ]
+        },
+        {
+            "type": "java",
+            "name": "Attach to ./mvnw -Dmaven.surefire.debug test",
+            "projectName": "lox-language",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 5005,
+            "sourceRoots": [
+                "${workspaceFolder}/src/main/java"
+            ]
         }
     ]
 }

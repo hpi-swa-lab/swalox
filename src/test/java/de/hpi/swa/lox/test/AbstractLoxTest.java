@@ -47,6 +47,8 @@ import static org.junit.Assert.fail;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import org.graalvm.polyglot.Context;
+import org.graalvm.polyglot.HostAccess;
+import org.graalvm.polyglot.PolyglotAccess;
 import org.graalvm.polyglot.PolyglotException;
 import org.graalvm.polyglot.io.IOAccess;
 import org.junit.After;
@@ -69,7 +71,11 @@ public abstract class AbstractLoxTest {
 
     @Before
     public void initContext() {
-        context = Context.newBuilder().allowIO(IOAccess.ALL).build();
+        context = Context.newBuilder()
+                .allowHostClassLookup(c -> true)
+                .allowHostAccess(HostAccess.ALL)
+                .allowPolyglotAccess(PolyglotAccess.ALL)
+                .allowIO(IOAccess.ALL).build();
     }
 
     @After
@@ -120,7 +126,7 @@ public abstract class AbstractLoxTest {
         errContent.reset();
         run(command);
         if (errContent.size() > 0) {
-           fail("Unexpected error output: " + errContent.toString());
+            fail("Unexpected error output: " + errContent.toString());
         }
 
         String actualOutput = normalize(outContent.toString());

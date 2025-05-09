@@ -1,0 +1,9 @@
+var nanoTime = lookup("sl", "nanoTime");
+var s = nanoTime();
+print "hello";
+print "time to print hello: " + String(nanoTime() - s);
+
+
+
+var slEvalBuiltin = lookup("sl", "eval");
+print slEvalBuiltin("sl", "function main(){ return nanoTime();}");

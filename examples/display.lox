@@ -1,0 +1,27 @@
+var DisplayClass = lookup("java", "de.hpi.swa.lox.runtime.LoxDisplay");
+var Display = DisplayClass();
+
+Display.frame.setSize(800, 800);
+
+var Color = lookup("java", "java.awt.Color");
+
+fun paint(g2d) {
+    print "paint";
+
+    // Set the circle color
+    g2d.setColor(Color.BLUE);
+
+    // // Draw a circle (oval with equal width and height)
+    var x = 100; // X-coordinate of the top-left corner
+    var y = 100; // Y-coordinate of the top-left corner
+    var diameter = 200; // Circle diameter
+
+    g2d.fillOval(x, y, diameter, diameter); // Filled circle
+}
+
+Display.paint = paint;
+
+
+while(true) {
+    
+}

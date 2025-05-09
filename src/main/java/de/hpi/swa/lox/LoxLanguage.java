@@ -12,12 +12,13 @@ import com.oracle.truffle.api.source.Source;
 import de.hpi.swa.lox.nodes.BuiltInNode;
 import de.hpi.swa.lox.nodes.ClockBuiltInNodeGen;
 import de.hpi.swa.lox.nodes.LoadBuiltInNodeGen;
+import de.hpi.swa.lox.nodes.LookupValueBuiltInNodeGen;
 import de.hpi.swa.lox.nodes.MathRoundBuiltInNodeGen;
 import de.hpi.swa.lox.nodes.NumberBuiltInNodeGen;
 import de.hpi.swa.lox.nodes.StringBuiltInNodeGen;
 import de.hpi.swa.lox.parser.LoxBytecodeCompiler;
 import de.hpi.swa.lox.runtime.LoxContext;
- 
+
 @Bind.DefaultExpression("get($node)")
 @TruffleLanguage.Registration(id = LoxLanguage.ID)
 public class LoxLanguage extends TruffleLanguage<LoxContext> {
@@ -31,13 +32,13 @@ public class LoxLanguage extends TruffleLanguage<LoxContext> {
     private Map<String, BuiltInNode> getBuiltins() {
         if (builtins == null) {
             builtins = Map
-                .of(
-                    "clock", ClockBuiltInNodeGen.create(this),
-                    "Number", NumberBuiltInNodeGen.create(this),
-                    "String", StringBuiltInNodeGen.create(this),
-                    "load", LoadBuiltInNodeGen.create(this),
-                    "round", MathRoundBuiltInNodeGen.create(this)
-                );
+                    .of(
+                            "clock", ClockBuiltInNodeGen.create(this),
+                            "Number", NumberBuiltInNodeGen.create(this),
+                            "String", StringBuiltInNodeGen.create(this),
+                            "load", LoadBuiltInNodeGen.create(this),
+                            "round", MathRoundBuiltInNodeGen.create(this),
+                            "lookup", LookupValueBuiltInNodeGen.create(this));
         }
         return builtins;
     }
@@ -57,4 +58,10 @@ public class LoxLanguage extends TruffleLanguage<LoxContext> {
     public static LoxLanguage get(Node node) {
         return REFERENCE.get(node);
     }
+
+    @Override
+    protected boolean isThreadAccessAllowed(Thread thread, boolean singleThreaded) {
+        return true;
+    }
+
 }

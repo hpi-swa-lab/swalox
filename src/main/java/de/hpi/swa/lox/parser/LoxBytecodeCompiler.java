@@ -514,9 +514,14 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
                         break;
                 }
             }
+            b.beginLoxValue();
             visitFactor(ctx.factor(0));
+            b.endLoxValue();
+
             for (int i = 1; i < ctx.getChildCount() - 1; i += 2) {
+                b.beginLoxValue();
                 visitFactor(ctx.factor((i + 1) / 2));
+                b.endLoxValue();
                 var operation = ctx.getChild(i);
                 switch (operation.getText()) {
                     case "+":
@@ -596,7 +601,6 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
         return null;
     }
 
-
     @Override
     public Void visitFactor(FactorContext ctx) {
         if (ctx.getChildCount() == 1) {
@@ -607,15 +611,20 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
                 switch (operation.getText()) {
                     case "*":
                         b.beginLoxMul();
+                        // IDEA b.beginLoxCastToNumber
                         break;
                     case "/":
                         b.beginLoxDiv();
                         break;
                 }
             }
+            b.beginLoxValue();
             visitRemainder(ctx.remainder(0));
+            b.endLoxValue();
             for (int i = 1; i < ctx.getChildCount() - 1; i += 2) {
+                b.beginLoxValue();
                 visitRemainder(ctx.remainder((i + 1) / 2));
+                b.endLoxValue();
                 var operation = ctx.getChild(i);
                 switch (operation.getText()) {
                     case "*":
@@ -638,15 +647,18 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
             for (int i = ctx.getChildCount() - 2; i >= 0; i -= 2) {
                 b.beginLoxMod();
             }
+            b.beginLoxValue();
             visitUnary(ctx.unary(0));
+            b.endLoxValue();
             for (int i = 1; i < ctx.getChildCount() - 1; i += 2) {
+                b.beginLoxValue();
                 visitUnary(ctx.unary((i + 1) / 2));
+                b.endLoxValue();
                 b.endLoxMod();
             }
         }
         return null;
     }
-
 
     @Override
     public Void visitComparison(ComparisonContext ctx) {
@@ -671,9 +683,13 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
                         break;
                 }
             }
+            b.beginLoxValue();
             visitTerm(ctx.term(0));
+            b.endLoxValue();
             for (int i = 1; i < ctx.getChildCount() - 1; i += 2) {
+                b.beginLoxValue();
                 visitTerm(ctx.term((i + 1) / 2));
+                b.endLoxValue();
                 var operation = ctx.getChild(i);
                 switch (operation.getText()) {
                     case "<":
@@ -711,9 +727,13 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
                         break;
                 }
             }
+            b.beginLoxValue();
             visitComparison(ctx.comparison(0));
+            b.endLoxValue();
             for (int i = 1; i < ctx.getChildCount() - 1; i += 2) {
+                b.beginLoxValue();
                 visitComparison(ctx.comparison((i + 1) / 2));
+                b.endLoxValue();
                 var operation = ctx.getChild(i);
                 switch (operation.getText()) {
                     case "==":
@@ -744,7 +764,9 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
                     b.beginLoxIsTruthy();
                     break;
             }
+            b.beginLoxValue();
             visitUnary(ctx.unary());
+            b.endLoxValue();
             switch (operation.getText()) {
                 case "-":
                     b.endLoxUnaryMinus();
