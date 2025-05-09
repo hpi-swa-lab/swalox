@@ -42,6 +42,7 @@
 package de.hpi.swa.lox.test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -117,6 +118,10 @@ public abstract class AbstractLoxTest {
         outContent.reset();
         errContent.reset();
         run(command);
+        if (errContent.size() > 0) {
+           fail("Unexpected error output: " + errContent.toString());
+        }
+
         String actualOutput = normalize(outContent.toString());
         assertEquals(testCaseName, expectedOutput, actualOutput);
     }

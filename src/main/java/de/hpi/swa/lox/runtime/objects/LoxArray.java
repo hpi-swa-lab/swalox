@@ -12,7 +12,6 @@ public class LoxArray {
     int size = 0;
 
     public LoxArray() {
-        // elements = new ArrayList<Object>();
         elements = new Object[10];
     }
 

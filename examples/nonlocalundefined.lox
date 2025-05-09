@@ -1,0 +1,8 @@
+fun outer() { 
+    var a;
+    fun inner() { 
+        return a;
+    }
+    return inner();
+}
+print outer();

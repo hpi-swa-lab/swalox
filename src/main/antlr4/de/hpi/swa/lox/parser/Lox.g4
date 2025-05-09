@@ -14,18 +14,21 @@ grammar Lox;
 
 program        : declaration* EOF ;
 
-declaration    :  varDecl 
+declaration    :  funDecl
+               | varDecl 
                | statement ;
 
 statement      : exprStmt 
                | forStmt
                | ifStmt
                | printStmt
+               | returnStmt
                | whileStmt
                | haltStmt
                | hackStmt
                | block;
 
+funDecl        : 'fun' function ';'? ;
 varDecl        : 'var' IDENTIFIER ('=' expression )? ';' ;
 
 exprStmt       : expression ';' ;
@@ -35,6 +38,7 @@ forStmt        : 'for' '(' (varDecl | exprStmt | ';' )
 ifStmt         : 'if' '(' condition=expression ')' then=statement
                  ( 'else' alt=statement )? ;
 printStmt      : 'print' expression ';' ;
+returnStmt     : 'return' expression? ';' ;
 whileStmt      : 'while' '(' condition=expression ')' body=statement;
 
 haltStmt       : 'halt;' ;
@@ -57,24 +61,27 @@ comparison     : term ( ( '>' | '>=' | '<' | '<=' ) term )* ;
 term           : factor ( ( '-' | '+' ) factor )* ;
 factor         : unary ( ( '/' | '*' ) unary )* ;
 
-unary          : ( '!' | '-' ) unary | primary  ;
-
+unary          : ( '!' | '-' ) unary | call;
+call           : primary callArguments* ;
+ 
+callArguments : '(' arguments? ')';
 
 primary         : number | string | true | false | nil | array |  arrayExpr | variableExpr | '(' expression ')';    
 
 variableExpr    : IDENTIFIER;
 arrayExpr       : left=variableExpr '[' index=expression ']';
 
-
 array : '[]';
 
+function       : IDENTIFIER '(' parameters? ')' block ;
+parameters     : IDENTIFIER ( ',' IDENTIFIER )* ;
+arguments      : expression ( ',' expression )* ;
 
 string          : STRING ;
 nil             : 'nil';     
 true            : 'true';
 false           : 'false';
 number          : NUMBER;
-
 
 NUMBER          : DIGIT+ ( '.' DIGIT+ )? ;
 STRING          : '"' (~["\\])* '"' ;
@@ -85,6 +92,7 @@ fragment DIGIT  : [0-9] ;
 // more... 
 WS             : [ \t\r\n]+ -> skip ;
 LINE_COMMENT : '//' ~[\r\n]* -> skip ;
+
 
 // Local Variables:
 // eval: (add-hook 'after-save-hook (lambda () (if (fboundp 'lsp-workspace-root) (if-let ((workspace (car (gethash (lsp-workspace-root) (lsp-session-folder->servers (lsp-session)))))) (with-lsp-workspace workspace (lsp-notify "workspace/didChangeWatchedFiles" `((changes . [((type . ,(alist-get 'changed lsp--file-change-type)) (uri . ,(lsp--path-to-uri buffer-file-name)))]))))))) nil t)

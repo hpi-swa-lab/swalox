@@ -5,18 +5,23 @@ import java.math.BigInteger;
 import java.util.Objects;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.bytecode.BytecodeNode;
 import com.oracle.truffle.api.bytecode.BytecodeRootNode;
 import com.oracle.truffle.api.bytecode.ConstantOperand;
 import com.oracle.truffle.api.bytecode.GenerateBytecode;
 import com.oracle.truffle.api.bytecode.LocalAccessor;
 import com.oracle.truffle.api.bytecode.Operation;
+import com.oracle.truffle.api.bytecode.Variadic;
 import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameDescriptor;
+import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.DirectCallNode;
+import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -28,14 +33,16 @@ import de.hpi.swa.lox.nodes.operations.BinaryOperations.SubtractNode;
 import de.hpi.swa.lox.runtime.LoxContext;
 import de.hpi.swa.lox.runtime.objects.GlobalObject;
 import de.hpi.swa.lox.runtime.objects.LoxArray;
+import de.hpi.swa.lox.runtime.objects.LoxFunction;
 import de.hpi.swa.lox.runtime.objects.Nil;
 import de.hpi.swa.lox.parser.LoxRuntimeError;
-
 
 @GenerateBytecode(//
         languageClass = LoxLanguage.class, //
         boxingEliminationTypes = { long.class, boolean.class }, //
         enableUncachedInterpreter = true, //
+        enableMaterializedLocalAccesses = true, //
+        // storeBytecodeIndexInFrame = true, //
         // defaultLocalValue = Nil.INSTANCE, // does not work?
         enableBlockScoping = true, // should be enabled by default
         enableSerialization = true)
@@ -57,14 +64,16 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
     }
 
     static private boolean isTruthy(Object object) {
-        if (object == Nil.INSTANCE) return false;
-        if (object instanceof Boolean) return (boolean)object;
+        if (object == Nil.INSTANCE)
+            return false;
+        if (object instanceof Boolean)
+            return (boolean) object;
         return true;
     }
 
     @Operation
     public static final class LoxIsTruthy {
-        
+
         @Specialization
         static boolean bool(boolean value) {
             return value == true;
@@ -75,7 +84,6 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
             return isTruthy(value);
         }
     }
-
 
     // Print Statement
     @Operation
@@ -134,8 +142,8 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
     public static final class LoxAdd {
         @Specialization
         static Object doOp(Object left, Object right,
-            @Bind Node node,
-            @Cached AddNode addNode) {
+                @Bind Node node,
+                @Cached AddNode addNode) {
             return addNode.execute(left, right);
         }
     }
@@ -144,8 +152,8 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
     public static final class LoxSub {
         @Specialization
         static Object doOp(Object left, Object right,
-            @Bind Node node,
-            @Cached SubtractNode subtractNode) {       
+                @Bind Node node,
+                @Cached SubtractNode subtractNode) {
             return subtractNode.execute(left, right);
         }
     }
@@ -154,8 +162,8 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
     public static final class LoxMul {
         @Specialization
         static Object doOp(Object left, Object right,
-            @Bind Node node,
-            @Cached MultiplyNode multiplyNode) {       
+                @Bind Node node,
+                @Cached MultiplyNode multiplyNode) {
             return multiplyNode.execute(left, right);
         }
     }
@@ -396,8 +404,9 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
 
         @Fallback
         static Object fallback(Object left, Object right, @Bind Node node) {
-            return left == right; // equality is special... one should be able to ask any question and get false...
-            
+            return left == right; // equality is special... one should be able to ask any question and get
+                                  // false...
+
             // throw typeError(node, "==", left, right);
         }
     }
@@ -533,7 +542,7 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
 
     @Operation
     public static final class LoxNewArray {
-        
+
         @Specialization
         static Object fallback() {
             return new LoxArray();
@@ -542,8 +551,7 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
 
     @Operation
     public static final class LoxReadArray {
-        
-        
+
         @Specialization(guards = "index >= 0")
 
         static Object readArray(LoxArray array, long index) {
@@ -590,23 +598,97 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
         }
     }
 
-    // @Operation
-    // public static final class VariableExpr {
-    // @Specialization
-    // static Object doVariable(VirtualFrame frame, String name, @Bind LoxContext
-    // context, @Bind Node node) {
-    // // return context.getVariable(name);
+    @Operation
+    @ConstantOperand(type = LocalAccessor.class)
+    public static final class LoxCheckNonLocalDefined {
+        @Specialization
+        static void doDefault(LocalAccessor accessor, MaterializedFrame materializedFrame,
+                @Bind BytecodeNode bytecodeNode,
+                @Bind LoxContext context,
+                @Bind Node node) {
+            if (accessor.isCleared(bytecodeNode, materializedFrame)) {
+                throw new LoxRuntimeError(formatError(accessor), node);
+            }
+        }
 
-    // var slot = frame.getFrameDescriptor().findOrAddAuxiliarySlot(name);
+        @TruffleBoundary
+        private static String formatError(LocalAccessor accessor) {
+            return "Variable " + accessor.toString() + " was not defined";
+        }
+    }
 
-    // var value = frame.getAuxiliarySlot(slot);
-    // if (value == null) {
-    // return Nil.INSTANCE;
-    // }
+    @Operation
+    @ConstantOperand(type = int.class)
+    public static final class LoxLoadArgument {
+        @Specialization(guards = "index <= arguments.length")
+        static Object doDefault(VirtualFrame frame, int index,
+                @Bind("frame.getArguments()") Object[] arguments) {
+            return arguments[index + 1];
+        }
 
-    // return value;
-    // }
-    // }
+        @Fallback
+        static Object doLoadOutOfBounds(int index) {
+            /* Use the default null value. */
+            return Nil.INSTANCE;
+        }
+    }
+
+    @Operation
+    @ConstantOperand(type = String.class)
+    @ConstantOperand(type = RootCallTarget.class)
+    @ConstantOperand(type = int.class)
+    public static final class LoxCreateFunction {
+
+        @Specialization
+        static LoxFunction doDefault(VirtualFrame frame, String name, RootCallTarget callTarget, int frameLevel) {
+            MaterializedFrame materializedFrame = frameLevel > 0 ? frame.materialize() : null;
+            return new LoxFunction(name, callTarget, materializedFrame);
+        }
+    }
+
+    @Operation
+    public static final class LoxCall {
+
+        @Specialization(limit = "3", //
+                guards = "function.getCallTarget() == cachedTarget")
+        protected static Object doDirect(LoxFunction function, @Variadic Object[] arguments,
+                @Cached("function.getCallTarget()") RootCallTarget cachedTarget,
+                @Cached("create(cachedTarget)") DirectCallNode directCallNode) {
+            return directCallNode.call(function, function.createArguments(arguments));
+        }
+
+        @Specialization(replaces = "doDirect")
+        static Object doIndirect(LoxFunction function, @Variadic Object[] arguments,
+                @Cached IndirectCallNode callNode) {
+            return callNode.call(function.getCallTarget(), function.createArguments(arguments));
+        }
+
+        @TruffleBoundary
+        @Specialization
+        static Object doDefault(Object obj, @Variadic Object[] arguments, @Bind Node node) {
+            throw new LoxRuntimeError("cannot call " + obj, node);
+        }
+    }
+
+    @Operation
+    @ConstantOperand(type = int.class)
+    public static final class LoxLoadMaterialzedFrameN {
+
+        @Specialization
+        public static MaterializedFrame doDefault(VirtualFrame frame, int index) {
+            return LoxFunction.getFrameAtLevelN(frame, index);
+        }
+    }
+
+    // For DEBUGGING / TESTING BytecodeDSL, see visitHack
+
+    @Operation
+    public static final class MaterializeFrame {
+        @Specialization
+        public static MaterializedFrame materialize(VirtualFrame frame) {
+            return frame.materialize();
+        }
+    }
 
     // Helper
 
@@ -618,7 +700,6 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
             result.append(" ");
             result.append(value);
         }
-        ;
 
         return new LoxRuntimeError(result.toString(), node);
     }
