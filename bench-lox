@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# for java version etc... 
+CLASSPATH=`cat /home/jens/byopl/byopl24-00a/classpath`
+JAVA="/home/jens/.sdkman/candidates/java/current/bin/java"
+
+"$JAVA" -cp "$CLASSPATH" $EXTRA_JAVA_ARGS de.hpi.swa.lox.cli.LoxMain  "$@"

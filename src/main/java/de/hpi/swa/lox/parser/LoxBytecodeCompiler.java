@@ -31,6 +31,7 @@ import de.hpi.swa.lox.parser.LoxParser.ArrayAssignmentContext;
 import de.hpi.swa.lox.parser.LoxParser.ArrayContext;
 import de.hpi.swa.lox.parser.LoxParser.ArrayExprContext;
 import de.hpi.swa.lox.parser.LoxParser.AssignmentContext;
+import de.hpi.swa.lox.parser.LoxParser.Bit_orContext;
 import de.hpi.swa.lox.parser.LoxParser.BlockContext;
 import de.hpi.swa.lox.parser.LoxParser.CallArgumentsContext;
 import de.hpi.swa.lox.parser.LoxParser.CallContext;
@@ -47,12 +48,14 @@ import de.hpi.swa.lox.parser.LoxParser.FunDeclContext;
 import de.hpi.swa.lox.parser.LoxParser.FunctionContext;
 import de.hpi.swa.lox.parser.LoxParser.HackStmtContext;
 import de.hpi.swa.lox.parser.LoxParser.IfStmtContext;
+import de.hpi.swa.lox.parser.LoxParser.Logic_andContext;
 import de.hpi.swa.lox.parser.LoxParser.Logic_orContext;
 import de.hpi.swa.lox.parser.LoxParser.NilContext;
 import de.hpi.swa.lox.parser.LoxParser.NumberContext;
 import de.hpi.swa.lox.parser.LoxParser.ParametersContext;
 import de.hpi.swa.lox.parser.LoxParser.PrintStmtContext;
 import de.hpi.swa.lox.parser.LoxParser.ProgramContext;
+import de.hpi.swa.lox.parser.LoxParser.RemainderContext;
 import de.hpi.swa.lox.parser.LoxParser.ReturnStmtContext;
 import de.hpi.swa.lox.parser.LoxParser.StatementContext;
 import de.hpi.swa.lox.parser.LoxParser.StringContext;
@@ -545,21 +548,54 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
         return null;
     }
 
-    public Void visitLogic_and(LoxParser.Logic_andContext ctx) {
+    public Void visitLogic_and(Logic_andContext ctx) {
         if (ctx.getChildCount() == 1) {
             return super.visitLogic_and(ctx);
         } else {
             for (int i = ctx.getChildCount() - 2; i >= 0; i -= 2) {
                 b.beginLoxAnd();
             }
-            visitEquality(ctx.equality(0));
+            visitBit_or(ctx.bit_or(0));
             for (int i = 1; i < ctx.getChildCount() - 1; i += 2) {
-                visitEquality(ctx.equality((i + 1) / 2));
+                visitBit_or(ctx.bit_or((i + 1) / 2));
                 b.endLoxAnd();
             }
         }
         return null;
     }
+
+    public Void visitBit_or(Bit_orContext ctx) {
+        if (ctx.getChildCount() == 1) {
+            return super.visitBit_or(ctx);
+        } else {
+            for (int i = ctx.getChildCount() - 2; i >= 0; i -= 2) {
+                b.beginLoxBitOr();
+            }
+            visitBit_and(ctx.bit_and(0));
+            for (int i = 1; i < ctx.getChildCount() - 1; i += 2) {
+                visitBit_and(ctx.bit_and((i + 1) / 2));
+                b.endLoxBitOr();
+            }
+        }
+        return null;
+    }
+
+    public Void visitBit_and(LoxParser.Bit_andContext ctx) {
+        if (ctx.getChildCount() == 1) {
+            return super.visitBit_and(ctx);
+        } else {
+            for (int i = ctx.getChildCount() - 2; i >= 0; i -= 2) {
+                b.beginLoxBitAnd();
+            }
+            visitEquality(ctx.equality(0));
+            for (int i = 1; i < ctx.getChildCount() - 1; i += 2) {
+                visitEquality(ctx.equality((i + 1) / 2));
+                b.endLoxBitAnd();
+            }
+        }
+        return null;
+    }
+
 
     @Override
     public Void visitFactor(FactorContext ctx) {
@@ -577,9 +613,9 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
                         break;
                 }
             }
-            visitUnary(ctx.unary(0));
+            visitRemainder(ctx.remainder(0));
             for (int i = 1; i < ctx.getChildCount() - 1; i += 2) {
-                visitUnary(ctx.unary((i + 1) / 2));
+                visitRemainder(ctx.remainder((i + 1) / 2));
                 var operation = ctx.getChild(i);
                 switch (operation.getText()) {
                     case "*":
@@ -593,6 +629,24 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
         }
         return null;
     }
+
+    @Override
+    public Void visitRemainder(RemainderContext ctx) {
+        if (ctx.getChildCount() == 1) {
+            return super.visitRemainder(ctx);
+        } else {
+            for (int i = ctx.getChildCount() - 2; i >= 0; i -= 2) {
+                b.beginLoxMod();
+            }
+            visitUnary(ctx.unary(0));
+            for (int i = 1; i < ctx.getChildCount() - 1; i += 2) {
+                visitUnary(ctx.unary((i + 1) / 2));
+                b.endLoxMod();
+            }
+        }
+        return null;
+    }
+
 
     @Override
     public Void visitComparison(ComparisonContext ctx) {

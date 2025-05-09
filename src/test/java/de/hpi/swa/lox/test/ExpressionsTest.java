@@ -192,5 +192,23 @@ public class ExpressionsTest extends AbstractLoxTest {
         
     }
 
+    @Test
+    public void testBitwise() {
+        runAndExpect("testBitwise", "print 1 & 2;", "0\n");
+        runAndExpect("testBitwise", "print 1 | 2;", "3\n");
+        // runAndExpect("testBitwise", "print 1 ^ 2;", "3\n");
+        // runAndExpect("testBitwise", "print ~1;", "-2\n");
+        // runAndExpect("testBitwise", "print 1 << 1;", "2\n");
+        // runAndExpect("testBitwise", "print 2 >> 1;", "1\n");
+    }
+
+
+    @Test
+    public void testRemainder() {
+        runAndExpect("testRemainder", "print 1 % 2;", "1\n");
+        runAndExpect("testRemainder", "print 3 % 2;", "1\n");
+        runAndExpect("testRemainder", "print 4 % 2;", "0\n");
+    }
+
 
 }

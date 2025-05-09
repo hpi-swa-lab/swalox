@@ -21,39 +21,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-// based on https://github.com/smarr/are-we-fast-yet/blob/master/benchmarks/JavaScript/sieve.js
-
-load("benchmark.lox");
-
-class Sieve < Benchmark {
-    sieve(flags, size) {
-      var primeCount = 0;
-  
-      for (var i = 2; i <= size; i = i + 1) {
-        if (flags[i - 1]) {
-          primeCount = primeCount + 1;
-          var k = i + i;
-          while (k <= size) {
-            flags[k - 1] = false;
-            k = k + i;
-          }
-        }
-      }
-      return primeCount;
-    }
-  
-    benchmark() {
-      var flags = [];
-      for (var i = 0; i < 5000; i = i + 1) {
-        flags[i] = true;
-      }
-      return this.sieve(flags, 5000);
-    }
-  
-    verifyResult(result) {
-      return 669 == result;
-    }
+class Random {
+  init() {
+    this.seed = 74755;
   }
-  
-return Sieve();
-  
+  next() {
+    this.seed = (this.seed * 1309 + 13849) & 65535;
+    return this.seed;
+  }
+}

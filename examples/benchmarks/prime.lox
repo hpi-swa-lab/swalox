@@ -1,0 +1,59 @@
+load("benchmark.lox");
+
+class Prime < Benchmark {
+	remove_factor(n, f) {
+		while (mod(n, f) == 0) {
+			n = n / f;
+		}
+		return n;
+	}
+
+	prime_factors(n) {
+		var factors = [];
+		print(factors);
+		if (mod(n, 2) == 0) {
+			factors[factors.length] = 2;
+			n = this.remove_factor(n, 2);
+		}
+		if (mod(n, 3) == 0) {
+			factors[factors.length] = 3;
+			n = this.remove_factor(n, 3);
+		}
+		for (var i = 2; n > 1; i = i + 6) {
+			if (mod(n, i + 3) == 0) {
+				factors[factors.length] = i + 3;
+				n = this.remove_factor(n, i + 3);
+			}
+			if (mod(n, i + 5) == 0) {
+				factors[factors.length] = i + 5;
+				n = this.remove_factor(n, i + 5);
+			}
+		}
+		return factors;
+	}
+
+	verifyResult(result) {
+		var factors = [];
+		factors[0] = 350377;
+		factors[1] = 1299709;
+		factors[3] = 15485863;
+		
+		if (factors.length != result.length) {
+			print result;
+			return false;
+		}
+		for (var i = 0; i < factors.length; i = i + 1) {
+			if (result[i] != factors[i]) {
+				print result;
+				return false;
+			}
+		}
+		return true;
+	}
+
+	benchmark() {
+		return this.prime_factors(109207519230565847226107317);
+	}
+}
+
+return Prime();

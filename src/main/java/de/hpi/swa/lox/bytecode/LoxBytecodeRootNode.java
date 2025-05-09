@@ -449,6 +449,45 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
     }
 
     @Operation
+    public static final class LoxBitAnd {
+        @Specialization
+        static long doLong(long left, long right) {
+            return left & right;
+        }
+
+        @Fallback
+        static Object fallback(Object left, Object right, @Bind Node node) {
+            throw typeError(node, "&", left, right);
+        }
+    }
+
+    @Operation
+    public static final class LoxBitOr {
+        @Specialization
+        static long doLong(long left, long right) {
+            return left | right;
+        }
+
+        @Fallback
+        static Object fallback(Object left, Object right, @Bind Node node) {
+            throw typeError(node, "|", left, right);
+        }
+    }
+
+    @Operation
+    public static final class LoxMod {
+        @Specialization
+        static long doLong(long left, long right) {
+            return left % right;
+        }
+
+        @Fallback
+        static Object fallback(Object left, Object right, @Bind Node node) {
+            throw typeError(node, "|", left, right);
+        }
+    }
+
+    @Operation
     public static final class LoxUnaryMinus {
         @Specialization
         static long doLong(long value) {
@@ -687,7 +726,6 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
 
         }
 
-        @TruffleBoundary
         @Specialization
         static Object callFunction(LoxFunction obj, @Variadic Object[] arguments,
                 @Cached LoxCallFunctionNode callNode) {
@@ -806,14 +844,50 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
     protected static abstract class LookupMethodNode extends Node {
         public abstract LoxFunction execute(LoxObject obj, LoxClass startingClass, String name);
 
-        @Specialization(limit = "1")
-        public LoxFunction doDefault(LoxObject obj, LoxClass startingClass, String name,
+        @Specialization(limit = "1", guards = { "startingClass == cachedStartingClass", "name == cachedName" })
+        public LoxFunction doCached(LoxObject obj, LoxClass startingClass, String name,
+                @Cached("name") String cachedName, @Cached("startingClass") LoxClass cachedStartingClass,
+                @CachedLibrary("startingClass") DynamicObjectLibrary dylib,
+                @Cached("lookupMethod(startingClass, name, dylib)") LoxFunction cachedMethod) {
+            if (cachedMethod != null) {
+                return new LoxFunction(obj, cachedMethod); // bind method to object
+            } else {
+                return null;
+            }
+        }
+
+        @Specialization(limit = "1", replaces = "doCached")
+        public LoxFunction doUncached(LoxObject obj, LoxClass startingClass, String name,
+                @CachedLibrary("startingClass") DynamicObjectLibrary dylib) {
+
+            var method = lookupMethod(startingClass, name, dylib);
+            if (method != null) {
+                return new LoxFunction(obj, method); // bind method to object
+            } else {
+                return null;
+            }
+        }
+
+        // @Specialization(limit = "1")
+        // public LoxFunction doUncached(LoxObject obj, LoxClass startingClass, String
+        // name,
+        // @CachedLibrary("startingClass") DynamicObjectLibrary dylib) {
+
+        // var method = lookupMethod(startingClass, name, dylib);
+        // if (method != null) {
+        // return new LoxFunction(obj, method); // bind method to object
+        // } else {
+        // return null;
+        // }
+        // }
+
+        public LoxFunction lookupMethod(LoxClass startingClass, String name,
                 @CachedLibrary("startingClass") DynamicObjectLibrary dylib) {
             LoxClass klass = startingClass;
             while (klass != null) {
                 var m = dylib.getOrDefault(klass, name, null);
                 if (m != null) {
-                    return new LoxFunction(obj, (LoxFunction) m); // bind method to object
+                    return (LoxFunction) m;
                 }
                 klass = (LoxClass) dylib.getOrDefault(klass, "super", null);
             }

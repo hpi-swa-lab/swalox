@@ -59,11 +59,18 @@ arrayAssignment    : left=arrayExpr '[' index=expression ']' '=' right=assignmen
                | other=logic_or;
 
 logic_or       : logic_and ( 'or' logic_and )* ;
-logic_and      : equality ( 'and' equality )* ;
+
+// logic_and      : equality ( 'and' equality )* ;
+
+logic_and      : bit_or ( 'and' bit_or )* ;
+bit_or       : bit_and ( '|' bit_and )* ;
+bit_and       : equality ( '&' equality )* ;
 equality       : comparison ( ( '!=' | '==' ) comparison )* ;
 comparison     : term ( ( '>' | '>=' | '<' | '<=' ) term )* ;
 term           : factor ( ( '-' | '+' ) factor )* ;
-factor         : unary ( ( '/' | '*' ) unary )* ;
+factor         : remainder ( ( '/' | '*' ) remainder )* ;
+
+remainder         : unary ( '%'  unary )* ;
 
 unary          : ( '!' | '-' ) unary | arrayExpr;
 

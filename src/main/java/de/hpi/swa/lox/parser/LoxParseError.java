@@ -79,7 +79,7 @@ public class LoxParseError extends AbstractTruffleException {
             column = startToken.getCharPositionInLine();
             length = stopToken.getStopIndex() - startToken.getStartIndex() + 1;
 
-            s = formatMessage(message, formatLocation(line, column));
+            s = formatMessage(message, formatLocation(source, line, column));
         }     
         return new LoxParseError(source, line, column, length, s); 
     }
@@ -88,15 +88,15 @@ public class LoxParseError extends AbstractTruffleException {
         return location + " Error:" + message;
     }
 
-    private static String formatLocation(int line, int column) {
-        return "[line " + line + " column " + column + "] ";
+    private static String formatLocation(Source source, int line, int column) {
+        return "[" + source.getName() + " line " + line + " column " + column + "] ";
     }   
 
 
     public static LoxParseError build(Source source, int line, int charPositionInLine, Token token, String message) {
     
         int col = charPositionInLine + 1;
-        String location = formatLocation(line, col);
+        String location = formatLocation(source, line, col);
         int length = token == null ? 1 : Math.max(token.getStopIndex() - token.getStartIndex(), 0);
         
         throw new LoxParseError(source, line, col, length, formatMessage(message, location));

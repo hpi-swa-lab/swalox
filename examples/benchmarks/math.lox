@@ -1,0 +1,14 @@
+class MathClass {
+
+    abs(number) {
+        if (number < 0) return 0 - number;
+        return number;
+    }
+
+    round(number) {
+        return round(number);
+    }
+
+}
+
+var Math = MathClass();
