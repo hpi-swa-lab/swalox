@@ -1,0 +1,3 @@
+load("test.lox");
+beginTest("09 Optimizations");
+expect("No new features in stage 09", true, "true");

@@ -1,0 +1,8 @@
+var a = 3;
+
+fun f(x) { 
+    var b  = x * 2; 
+    return b; 
+}
+
+f(a); 

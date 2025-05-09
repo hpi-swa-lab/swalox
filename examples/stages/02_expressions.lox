@@ -1,0 +1,57 @@
+load("test.lox");
+beginTest("02 Expressions");
+
+expect("logical not", !true, false);
+expect("logical not", !false, true);
+
+expect("unary minus", -1, -1);
+expect("unary minus", -1.5, -1.5);
+
+expect("logical or", true or true, true);
+expect("logical or", true or false, true);
+expect("logical or", false or true, true);
+expect("logical or", false or false, false);
+
+expect("logical and", true and true, true);
+expect("logical and", true and false, false);
+expect("logical and", false and true, false);
+expect("logical and", false and false, false);
+
+expect("arithmetic", 1 + 2, 3);
+expect("arithmetic", 1 - 2, -1);
+expect("arithmetic", 1 * 2, 2);
+expect("arithmetic", 1 / 2, 0.5);
+
+expect("comparison", 1 < 2, true);
+expect("comparison", 1 <= 2, true);
+expect("comparison", 1 > 2, false);
+expect("comparison", 1 >= 2, false);
+expect("comparison", 1 == 2, false);
+expect("comparison", 1 == 1, true);
+expect("comparison", 1 != 2, true);
+expect("comparison", 1 != 1, false);
+
+expect("precedence", 1 + 2 * 3, 7);
+expect("precedence", 1 * 2 + 3, 5);
+expect("precedence", 1 + 2 == 3, true);
+expect("precedence", 3 == 1 + 2, true);
+
+expect("expression grouping", (1 + 2) * 3, 9);
+expect("expression grouping", 1 + (2 * 3), 7);
+
+expect("truthiness", !nil, true);
+
+var result;
+if (1) result = 3;
+expect("truthiness condition", result, 3);
+
+if ("hello") result = 3;
+expect("truthiness condition", result, 3);
+
+if (nil) result = 3; else result = nil;
+expect("truthiness condition", result, nil);
+
+if (nil) result = 3; else result = 4;
+expect("truthiness condition", result, 4);
+
+expect("nil equals nil", nil == nil, true);

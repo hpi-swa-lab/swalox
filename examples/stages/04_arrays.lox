@@ -1,0 +1,23 @@
+load("test.lox");
+
+beginTest("04 Array Tests");
+
+var a = [];
+expect("new array", a, "[]");
+
+expect("get nil", a[1], "nil");
+
+a[0] = 3;
+expect("set a[0]=3", a[0], "3");
+
+
+var b = [];
+b[0] = 3;
+b[1] = 4;
+expect("print contents", b, "[3, 4]");
+
+var c = [];
+c[100] = 42;
+expect("print contents", c[100], "42");
+
+expect("print length", c.length, "101");

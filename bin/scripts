@@ -1,0 +1,6 @@
+
+
+for i in results/*; do echo -e "\nBENCH: "$i; cat $i; done > queens_results
+
+
+for i in examples-02/benchmarks/*; do ./migration_boring_lox_to_amazing_lox.sh $i; done

@@ -1,0 +1,3 @@
+// This is a test that relies only on things in Stage01;
+print "TEST: 01 Printing"; 
+print "  Pass 'Here we goo... Stage01 can just print'";

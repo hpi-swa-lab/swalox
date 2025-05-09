@@ -1,5 +1,5 @@
 {
-    // Customize this to point to a JDK 21, since LSP seems to crash with JDK 24
+    // Customize this to point to a JDK 21
     // e.g.
     //   "D:\\Program Files\\Java\\jdk-21"
     //   "/home/user/.sdkman/candidates/java/21.0.4-graal"
@@ -23,13 +23,10 @@
     "java.jdt.ls.vmargs": "-XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx2G -Xms100m -Xlog:disable",
     "makefile.configureOnOpen": false,
 
-<<<<<<<
     "editor.detectIndentation": false,
     "[java]": {
         "editor.tabSize": 4,
         "editor.insertSpaces": true
     }
-=======
->>>>>>>
     "java.addExports": [ "javax.swing", "java.awt" ]
 }

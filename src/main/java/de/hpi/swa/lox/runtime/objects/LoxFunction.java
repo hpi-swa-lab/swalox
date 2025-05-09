@@ -13,11 +13,6 @@ import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.nodes.RootNode;
-import com.oracle.truffle.api.strings.TruffleString;
-import com.oracle.truffle.api.strings.TruffleString.Encoding;
-
-import de.hpi.swa.lox.nodes.LoxRootNode;
-
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
 @ExportLibrary(InteropLibrary.class)

@@ -1,0 +1,8 @@
+
+load("test.lox");
+beginTest("10 Lookup");
+
+var slEvalBuiltin = lookup("sl", "eval");
+
+var result = slEvalBuiltin("sl", "function main(){ return 3 + 4;}");
+expect("sl main", result, "7");

@@ -1,0 +1,145 @@
+load("test.lox");
+beginTest("05 Functions");
+
+{
+    var out = "";
+    out = out + "2";
+    fun f() { out = out + "1"; }
+    out = out + "3";
+    expect("function declaration", out, "23");
+}
+
+{
+    var out = "";
+    fun f() { out = out + "1"; }
+    f();
+    f();
+    expect("function call", out, "11");
+}
+
+{
+    var out = "";
+    fun x() { out = out + "1"; }
+    var f = x;
+    f();
+    expect("function expression", out, "1");
+}
+
+{
+    var out = "";
+    fun f(a) { out = out + a; }
+    f("1");
+    expect("function declaration with parameter", out, "1");
+}
+
+{
+    var out = "";
+    fun f(a, b) { out = out + String(a + b); }
+    f(3, 4);
+    expect("function declaration with two parameter", out, "7");
+}
+
+{
+    var out = "";
+    fun f() { return "1"; }
+    out = out + String(f());
+    expect("function return", out, "1");
+}
+
+{
+    var out = "";
+    fun f(a, b) { return a + b; }
+    out = out + String(f(3, 4));
+    expect("function declaration with two parameter and return", out, "7");
+}
+
+{
+    var out = "";
+    fun outer() {
+        fun inner() {
+            return 1;
+        }
+        return inner();
+    }
+    out = out + String(outer());
+    expect("inner function", out, "1");
+}
+
+{
+    var out = "";
+    fun outer() {
+        var a = 1;
+        fun inner() {
+            return a;
+        }
+        return inner();
+    }
+    out = out + String(outer());
+    expect("inner function uses outer variable", out, "1");
+}
+
+{
+    var out = "";
+    fun outer() {
+        var a = 1;
+        fun inner() {
+            a = 2;
+            return a;
+        }
+        return inner();
+    }
+    out = out + String(outer());
+    expect("inner function uses outer variable", out, "2");
+}
+
+
+{
+    var out = "";
+    fun outer() {
+        var a = 1;
+        fun inner() {
+            return a;
+        }
+        return inner;
+    }
+    var f = outer();
+    out = out + String(f());
+    expect("inner function uses outer variable", out, "1");
+}
+
+{
+    var out = "";
+    fun outer() {
+        fun inner() {
+            return 1;
+        }
+        return inner;
+    }
+    out = out + String(outer()());
+    expect("function returns function", out, "1");
+}
+
+{
+    var out = "";
+    fun counter() {
+        var i = 0;
+        fun count() {
+            i = i + 1;
+            return i;
+        }
+        return count;
+    }
+    var c = counter();
+    out = out + String(c());
+    out = out + String(c());
+    expect("count function", out, "12");
+}
+
+{
+    var out = "";
+    fun printSum(a, b) {
+        out = out + String(a + b);
+    }
+    printSum(3, 4);
+    expect("slide example", out, "7");
+}

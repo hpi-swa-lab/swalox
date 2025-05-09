@@ -1,0 +1,16 @@
+load("test.lox");
+beginTest("02 Truthiness");
+
+expect("true is true", true and true, true);
+
+expect("true is false", true and false, false);
+
+expect("1 is true", true and 1, true);
+
+expect("0 is false", true and 0, false);
+
+expect("nil is false", true and nil, false);
+
+class O {}
+var o = O();
+expect("objects are true", true and o, true);

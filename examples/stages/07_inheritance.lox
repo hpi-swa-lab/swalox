@@ -1,0 +1,33 @@
+
+load("test.lox");
+beginTest("07 Inheritance");
+
+ 
+class A { 
+   m() {
+      return 3;
+   }
+
+   m2() {
+      return 4;
+   }
+} 
+
+class B < A {
+
+   m2() {return 5;}
+
+   test() { 
+      return super.m2();}
+   
+} 
+
+var b = B(); 
+expect("inherit method", b.m(), "3"); 
+
+class C < B {  
+
+} 
+
+var c = C();
+expect("super method", b.test(), "4"); 

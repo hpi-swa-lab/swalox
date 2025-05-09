@@ -8,10 +8,8 @@ The Lox implementation is developed as part of the Build Your Own Programming La
 
 ## Getting Started 
 
-See Getting Started section in [BYOPL-2024_Overview](https://1drv.ms/b/s!AosvRVbmrjPTm_YQOBq8GXW3BYNq5A?e=EaAI5S).
-
 For development, you can use Oracle JDK 21, OpenJDK 21, or any of its derivatives.
-For best performance use GraalVM for JDK 21 version 21.0.4.
+For best performance use GraalVM for JDK 24 version 24.0.1. 
 
 ## Maven
 

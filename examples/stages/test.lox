@@ -1,0 +1,11 @@
+fun expect(description, result, expected) {
+    if (String(result) == String(expected)) {
+        print "  Pass '" + description + "'";
+    } else {
+        print "  Fail '" + description + "'";
+        print "    Expected '" + String(expected) + "' but got '" + String(result) + "'";
+    }
+}
+fun beginTest(description) {
+    print "TEST: " + description ;
+}

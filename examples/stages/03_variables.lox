@@ -1,0 +1,22 @@
+load("test.lox");
+beginTest("03 Variables");
+
+{
+    var a = 3;
+    expect("assignment and usage", a, 3);
+}
+
+{
+    var a = 3;
+    {
+        var a = 4;
+        expect("shadowed write variable", a, 4);
+    }
+    expect("shadowed read variable", a, 3);
+}
+
+{
+    var a = 4;
+    a = 2;
+    expect("variable assignment", a, 2);
+}

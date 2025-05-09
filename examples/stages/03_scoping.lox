@@ -1,0 +1,18 @@
+load("test.lox");
+beginTest("03 Scoping");
+var a = "a";
+expect("global", a, "a"); 
+{
+    expect("a before var declaration", a, "a"); 
+    var a = "shadowed a";
+    expect("shadowed", a, "shadowed a"); 
+    {
+        var a = "double shadowed a";
+        expect("double shadowed", a, "double shadowed a"); 
+    }
+    expect("just shadowed again", a, "shadowed a"); 
+}
+expect("global again", a, "a"); 
+
+
+

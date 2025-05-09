@@ -1,0 +1,14 @@
+load("test.lox");
+
+beginTest("08 Multi Array Tests");
+
+class O {}
+var o = O();
+o.p = [];
+o.p[0] = 3;
+expect("arrays as properties", o.p[0], "3");
+
+var d = [];
+d[0] = [];
+d[0][0] = 3;
+expect("multi arrays", d[0][0], "3");

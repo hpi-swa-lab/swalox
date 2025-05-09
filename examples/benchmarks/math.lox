@@ -1,3 +1,5 @@
+var JavaMath = lookup("java", "java.lang.Math");
+
 class MathClass {
 
     abs(number) {
@@ -9,6 +11,13 @@ class MathClass {
         return round(number);
     }
 
+    floor(number) {
+        return JavaMath.floor(number);
+    }
+
+    mod(number, divisor) {
+        return number - divisor * this.floor(number / divisor);
+    }
 }
 
 var Math = MathClass();

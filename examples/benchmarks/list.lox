@@ -75,7 +75,7 @@ class List < Benchmark {
 
     // TAKL -- The TAKeuchi function using lists as counters
     takl(x, y, z) {
-        // print "takl " + x.length() + " " + y.length() + " " + z.length();
+        // print "takl " + String(x.length()) + " " + String(y.length()) + " " + String(z.length());
         if (this.isShorterThan(y, x)) {
             return this.takl(
                 this.takl(x.next, y, z),

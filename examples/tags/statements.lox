@@ -1,10 +1,11 @@
-    var a = 2; // variable declaration
+    var a = 2; // global variable declaration
 
-    fun f() { // function declaration
-        return 3; // return statement
+    fun f(x) { // function declaration
+        var b  = x * 2; // local variable declaration
+        return b; // return statement
     }
 
-    f(); // function call
+    f(a); // function call
 
     class A {
         // class declaration

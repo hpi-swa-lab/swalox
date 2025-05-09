@@ -1,0 +1,4 @@
+
+print "TEST: 01 Comments"; 
+// This is a comment
+print "  Pass 'comments work'";

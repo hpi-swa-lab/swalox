@@ -9,28 +9,50 @@ import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.strings.TruffleString;
+import de.hpi.swa.lox.runtime.objects.LoxObject;
+import de.hpi.swa.lox.runtime.objects.Nil;
 
 @GenerateUncached
 // @GenerateInline(true)
 public abstract class LoxConvertValueNode extends Node {
+    // @Specialization
+    // protected Object convert(Nil object) {
+    // return object;
+    // }
 
-    @Specialization
-    protected Object convert(Long object) {
+    // @Specialization
+    // protected Object convert(LoxObject object) {
+    // return object;
+    // }
+
+    // @Specialization
+    // protected Object convert(Long object) {
+    // return object;
+    // }
+
+    // @Specialization
+    // protected Object convert(Double object) {
+    // return object;
+    // }
+
+    // @Specialization
+    // protected Object convert(BigInteger object) {
+    // return object;
+    // }
+
+    // @Specialization
+    // protected Object convert(TruffleString object) {
+    // return object;
+    // }
+
+    @Specialization(guards = "isLoxType(object)")
+    protected Object convert(Object object) {
         return object;
     }
 
-    @Specialization
-    protected Object convert(Double object) {
-        return object;
-    }
-
-    @Specialization
-    protected Object convert(BigInteger object) {
-        return object;
-    }
-
-    @Specialization
-    protected Object convert(Object object, @CachedLibrary(limit = "1") InteropLibrary interop) {
+    @Specialization(guards = "!isLoxType(object)")
+    protected Object convert(Object object,
+            @CachedLibrary(limit = "1") InteropLibrary interop) {
         try {
             if (object instanceof Character c) {
                 return TruffleString.fromCodePointUncached(c, TruffleString.Encoding.UTF_8);
@@ -41,15 +63,17 @@ public abstract class LoxConvertValueNode extends Node {
             } else if (interop.fitsInBigInteger(object)) {
                 return interop.asBigInteger(object);
             } else if (interop.isString(object)) {
-                if (object instanceof TruffleString) {
-                    return object;
-                }
                 return TruffleString.fromJavaStringUncached(interop.asString(object), TruffleString.Encoding.UTF_8);
             }
         } catch (UnsupportedMessageException e) {
             // pass
         }
         return object;
+    }
+
+    protected static final boolean isLoxType(Object object) {
+        return object instanceof Nil || object instanceof LoxObject || object instanceof Long
+                || object instanceof Double || object instanceof BigInteger || object instanceof TruffleString;
     }
 
     public abstract Object execute(Object object);
