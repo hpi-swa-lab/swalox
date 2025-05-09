@@ -1,0 +1,15 @@
+load("test.lox");
+beginTest("02 Datatypes");
+
+expect("string", "Hello, World!", "Hello, World!");
+expect("string", "", "");
+expect("string", "😍", "😍");
+
+expect("number", 42, "42");
+expect("number", 2.5, "2.5");
+
+expect("boolean", true, "true");
+expect("boolean", false, "false");
+
+expect("nil", nil, "nil");
+

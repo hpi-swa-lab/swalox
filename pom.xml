@@ -16,10 +16,10 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.1.2</version>
         <configuration>
-            <!-- DISABLE TCK  for dev -->  
+            <!--  TCK  for dev -->  
             <!-- <dependenciesToScan>
                 <dependency>org.graalvm.truffle:truffle-tck-tests</dependency>
-            </dependenciesToScan> -->
+            </dependenciesToScan>  -->
             <argLine>
                --add-exports=java.base/jdk.internal.module=truffle.tck
                -Dpolyglot.engine.WarnInterpreterOnly=false

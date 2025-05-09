@@ -2,12 +2,8 @@ package de.hpi.swa.lox.bytecode;
 
 import java.util.ArrayList;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.bytecode.TagTreeNode;
-import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.interop.InteropLibrary;

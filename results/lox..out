@@ -1,0 +1,25 @@
+load benchmark: methodcall10.lox
+Starting methodcall10 benchmark ...
+methodcall10: iterations=1 runtime: 353564us
+methodcall10: iterations=1 runtime: 214889us
+methodcall10: iterations=1 runtime: 205495us
+methodcall10: iterations=1 runtime: 201074us
+methodcall10: iterations=1 runtime: 200434us
+methodcall10: iterations=1 runtime: 199248us
+methodcall10: iterations=1 runtime: 199496us
+methodcall10: iterations=1 runtime: 200963us
+methodcall10: iterations=1 runtime: 205512us
+methodcall10: iterations=1 runtime: 200298us
+methodcall10: iterations=1 runtime: 200029us
+methodcall10: iterations=1 runtime: 201158us
+methodcall10: iterations=1 runtime: 204151us
+methodcall10: iterations=1 runtime: 199390us
+methodcall10: iterations=1 runtime: 201931us
+methodcall10: iterations=1 runtime: 199601us
+methodcall10: iterations=1 runtime: 199899us
+methodcall10: iterations=1 runtime: 201759us
+methodcall10: iterations=1 runtime: 202013us
+methodcall10: iterations=1 runtime: 205139us
+methodcall10: iterations=20 average: 209802us total: 4196043us
+
+Total Runtime: 4196043us

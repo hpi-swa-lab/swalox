@@ -1,5 +1,5 @@
 {
-    // Customize this to point to a JDK 21
+    // Customize this to point to a JDK 21, since LSP seems to crash with JDK 24
     // e.g.
     //   "D:\\Program Files\\Java\\jdk-21"
     //   "/home/user/.sdkman/candidates/java/21.0.4-graal"

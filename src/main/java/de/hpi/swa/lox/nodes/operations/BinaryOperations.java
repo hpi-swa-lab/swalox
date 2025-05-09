@@ -10,7 +10,6 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.strings.TruffleString;
 
-
 import com.oracle.truffle.api.dsl.Bind;
 
 import de.hpi.swa.lox.parser.LoxRuntimeError;
@@ -143,7 +142,7 @@ public final class BinaryOperations {
         @Specialization
         @TruffleBoundary
         static TruffleString addStrings(TruffleString left, Object right, @Bind Node node) {
-            if (! (right instanceof TruffleString)) {
+            if (!(right instanceof TruffleString)) {
                 throw new LoxRuntimeError("Type Error: No automatic String conversion for " + right, node);
             }
             return TruffleString.fromJavaStringUncached(left + right.toString(), TruffleString.Encoding.UTF_8);

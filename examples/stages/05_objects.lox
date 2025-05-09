@@ -1,0 +1,46 @@
+load("test.lox");
+
+beginTest("05 Classes");
+
+class O {
+
+}
+expect("declare class", O, "Class O");
+
+var o = O();
+expect("instantiation", o, "O"); // Adjust the expected value as needed
+
+expect("properties", o.a, "nil");
+
+o.a = 3;
+expect("properties", o.a, "3");
+
+class O2 {
+    init() { this.b = 3; }
+    m1() { return 1; }
+    m2() { return this; }
+    m3() { return this.a; }
+}
+
+var o2 = O2();
+expect("method declaration", o2.m1, "O2#m1");
+
+expect("method call", o2.m1(), "1");
+
+expect("method call with this", o2.m2(), "O2");
+
+o2.a = 3;
+expect("method call with this property", o2.m3(), "3");
+
+var x = o2.m3;
+expect("bound method call", x(), "3");
+
+expect("init", o2.b, "3");
+
+class O3 {
+    init(a) { this.a = a; }
+}
+var o3 = O3(3);
+expect("init with arguments", o3.a, "3");
+
+

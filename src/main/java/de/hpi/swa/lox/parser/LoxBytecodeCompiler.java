@@ -402,13 +402,17 @@ public final class LoxBytecodeCompiler extends LoxBaseVisitor<Void> {
             visit(init);
         }
         b.beginWhile();
-        beginAttribution(ctx.condition);
-        b.beginTag(CONDITION);
-        b.beginLoxIsTruthy();
-        visit(ctx.condition);
-        b.endLoxIsTruthy();
-        b.endTag(CONDITION);
-        endAttribution();
+        if (ctx.condition != null) {
+            beginAttribution(ctx.condition);
+            b.beginTag(CONDITION);
+            b.beginLoxIsTruthy();
+            visit(ctx.condition);
+            b.endLoxIsTruthy();
+            b.endTag(CONDITION);
+            endAttribution();
+        } else {
+            b.emitLoadConstant(true);
+        }
         b.beginBlock();
         if (ctx.body != null)
             visit(ctx.body);

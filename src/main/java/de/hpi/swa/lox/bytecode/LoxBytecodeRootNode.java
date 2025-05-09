@@ -433,12 +433,15 @@ public abstract class LoxBytecodeRootNode extends LoxRootNode implements Bytecod
             return left.equals(right);
         }
 
+        @TruffleBoundary
         @Fallback
         static Object fallback(Object left, Object right, @Bind Node node) {
             // maybe add .equals() here?
 
-            return left == right; // equality is special... one should be able to ask any question and get
-                                  // false...
+            return left.equals(right);
+            // return left == right; // equality is special... one should be able to ask any
+            // question and get
+            // false...
 
             // throw typeError(node, "==", left, right);
         }
